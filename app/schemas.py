@@ -6,7 +6,8 @@ from pydantic import BaseModel, Field
 class TanCreationRequest(BaseModel):
     count: int = Field(description="The number of tan codes that should be created", lt=100)
     valid_from: datetime = Field(description="The date and time from which the generated TAN codes become valid.")
-    valid_to: datetime | None = Field(description="The date and time until the generated TAN codes remain valid.", default=None)
+    valid_to: datetime | None = Field(description="The date and time until the generated TAN codes remain valid.",
+                                      default=None)
 
 
 class TanCode(BaseModel):

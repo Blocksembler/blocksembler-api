@@ -1,25 +1,26 @@
 # Blocksembler REST API
 
-A FastAPI-based REST API for managing TAN codes and storing logging events in MongoDB.
+This is the Blocksembler backend API powered by FastAPI, designed to handle and store logging events for the
+Blocksembler platform.
 
 ## Setup
 
 ### Prerequisites
 
-- Python 3.11+
-- MongoDB running on localhost:27017
+- Docker
 
 ### Installation
 
-1. Clone the repository
-2. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Start the API server:
-   ```
-   uvicorn src.main:app --reload
-   ```
+```shell
+docker run --name blocksembler-api --port 80 blocksembler-api:latest
+```
+
+### Environment Variables
+
+| Name                       | Default     | Description                                      |
+|----------------------------|-------------|--------------------------------------------------|
+| `BLOCKSEMBLER_API_DB_URL`  | `localhost` | MongoDB instance host URL (e.g. localhost)       |
+| `BLOCKSEMBLER_API_DB_PORT` | `27017`     | MongoDB instance port number used for connection |
 
 ## API Endpoints
 
@@ -39,44 +40,20 @@ POST /logging/{tan_code}
 Stores multiple logging events for a specific TAN code in MongoDB.
 
 **Path Parameters:**
+
 - `tan_code` (string): The TAN code to associate with the logging events
 
 **Request Body:**
+
 - Array of LoggingEvent objects with the following properties:
-  - `ts` (datetime, optional): Timestamp of the event (defaults to current time)
-  - `type` (string): Type of the logging event
-  - `source` (string): Source of the log
-  - `payload` (object, optional): Additional data for the log (defaults to empty object)
+    - `ts` (datetime, optional): Timestamp of the event (defaults to current time)
+    - `type` (string): Type of the logging event
+    - `source` (string): Source of the log
+    - `payload` (object, optional): Additional data for the log (defaults to empty object)
 
 **Response:**
+
 - Returns the number of events successfully stored
-
-**Example Request:**
-
-```
-POST /logging/ABC123
-```
-
-Request body:
-```json
-[
-  {
-    "type": "info",
-    "source": "sensor_1",
-    "payload": {
-      "temperature": 22.5,
-      "humidity": 45
-    }
-  },
-  {
-    "type": "warning",
-    "source": "sensor_2",
-    "payload": {
-      "battery": "low"
-    }
-  }
-]
-```
 
 #### Get Logging Events by Date Range
 
@@ -87,13 +64,16 @@ GET /logging/{tan_code}?start={start_datetime}&end={end_datetime}
 Retrieves logging events for a specific TAN code within a date range.
 
 **Path Parameters:**
+
 - `tan_code` (string): The TAN code to retrieve events for
 
 **Query Parameters:**
+
 - `start` (datetime): Start date/time for the range
 - `end` (datetime, optional): End date/time for the range
 
 **Response:**
+
 - Returns an array of LoggingEvent objects sorted by timestamp (newest first)
 
 #### Get Latest Logging Event
@@ -105,9 +85,11 @@ GET /logging/{tan_code}/latest
 Retrieves the most recent logging event for a specific TAN code.
 
 **Path Parameters:**
+
 - `tan_code` (string): The TAN code to retrieve the latest event for
 
 **Response:**
+
 - Returns a single LoggingEvent object
 
 ## Data Models
