@@ -8,15 +8,22 @@ from fastapi import FastAPI, HTTPException
 from pymongo import MongoClient
 from starlette import status
 
-from schemas import TanCode, LoggingEvent, TanCreationRequest
-
+from app.schemas import TanCode, LoggingEvent, TanCreationRequest
 
 DB_URL = os.environ.get('BLOCKSEMBLER_API_DB_URL', 'localhost')
-DB_PORT = os.environ.get('BLOCKSEMBLER_API_DB_PORT', 27017)
+DB_PORT = int(os.environ.get('BLOCKSEMBLER_API_DB_PORT', 27017))
+
+if os.environ.get('DEBUG', True):
+    print(f"Using database at {DB_URL}:{DB_PORT}")
+
+BASE_URL = os.environ.get('BLOCKSEMBLER_API_BASE_URL', '')
 
 client = MongoClient(DB_URL, DB_PORT)
 
-app = FastAPI()
+if os.environ.get('DEBUG', True):
+    app = FastAPI(root_path=BASE_URL)
+else:
+    app = FastAPI(root_path=BASE_URL, docs_url=None, redoc_url=None, openapi_url=None)
 
 
 def generate_tan(length=6):
@@ -24,7 +31,16 @@ def generate_tan(length=6):
     return ''.join(random.choices(chars, k=length))
 
 
-@app.get("/tan/{tan_code}",
+@app.get("/health")
+async def health_check() -> dict:
+    try:
+        client.admin.command('ping')
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Can't connect to database")
+    return {"status": "ok"}
+
+
+@app.get("/tan/{code}",
          response_model=TanCode,
          status_code=status.HTTP_200_OK)
 async def get_tan_code(code: str) -> Any:
@@ -58,7 +74,7 @@ async def post_tan_code(req: TanCreationRequest) -> list[TanCode]:
 async def get_logging_events(tan_code: str, start: datetime, end: datetime | None = None) -> list[LoggingEvent]:
     db = client.blocksembler
     tan_result = db.tans.find_one({'code': tan_code})
-    
+
     if not tan_result:
         raise HTTPException(status_code=404, detail="TAN code not found")
 
@@ -82,16 +98,16 @@ async def get_latest_logging_event(tan_code: str) -> LoggingEvent:
     # Verify that the TAN code exists
     db = client.blocksembler
     tan_result = db.tans.find_one({'code': tan_code})
-    
+
     if not tan_result:
         raise HTTPException(status_code=404, detail="TAN code not found")
-    
+
     # Query for the latest event
     latest_event = db.logging_events.find_one(
         {'tan_code': tan_code},
         sort=[('ts', -1)]  # Sort by timestamp descending
     )
-    
+
     if not latest_event:
         raise HTTPException(status_code=404, detail="No logging events found for this TAN code")
 
@@ -104,7 +120,7 @@ async def get_latest_logging_event(tan_code: str) -> LoggingEvent:
 async def post_logging_events(tan_code: str, events: list[LoggingEvent]) -> int:
     db = client.blocksembler
     tan_result = db.tans.find_one({'code': tan_code})
-    
+
     if not tan_result:
         raise HTTPException(status_code=404, detail="TAN code not found")
 
@@ -115,7 +131,7 @@ async def post_logging_events(tan_code: str, events: list[LoggingEvent]) -> int:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid TAN code")
 
     if tan.valid_to and tan.valid_to < now:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="expired TAN code")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"TAN code expired on {tan.valid_to}")
 
     events_to_insert = []
     for event in events:
@@ -123,6 +139,7 @@ async def post_logging_events(tan_code: str, events: list[LoggingEvent]) -> int:
         event_dict['tan_code'] = tan_code
         events_to_insert.append(event_dict)
 
-    result = db.logging_events.insert_many(events_to_insert)
-    
-    return len(result.inserted_ids)
+    if events_to_insert:
+        result = db.logging_events.insert_many(events_to_insert)
+        return len(result.inserted_ids)
+    return 0
