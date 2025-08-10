@@ -23,7 +23,16 @@ def generate_tan(length=6):
     return ''.join(random.choices(chars, k=length))
 
 
-@app.get("/tan/{tan_code}",
+@app.get("/health")
+async def health_check() -> dict:
+    try:
+        client.admin.command('ping')
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Can't connect to database")
+    return {"status": "ok"}
+
+
+@app.get("/tan/{code}",
          response_model=TanCode,
          status_code=status.HTTP_200_OK)
 async def get_tan_code(code: str) -> Any:
