@@ -23,6 +23,7 @@ docker run --name blocksembler-api --port 80 blocksembler-api:latest
 | `BLOCKSEMBLER_API_DB_URL`   | `localhost` | Host address of the MongoDB instance (e.g., `localhost`) |
 | `BLOCKSEMBLER_API_DB_PORT`  | `27017`     | Port number for connecting to the MongoDB instance       |
 | `BLOCKSEMBLER_API_BASE_URL` | `/`         | Base URL path under which this API is served             |
+| `BLOCKSEMBLER_ORIGINS`      | `*`         | Allowed Origins                                          |
 
 ## API Endpoints
 
