@@ -53,21 +53,6 @@ async def get_tan_code(code: str) -> Any:
     return TanCode(**result)
 
 
-@app.post("/tan/",
-          response_model=list[TanCode],
-          status_code=status.HTTP_200_OK)
-async def post_tan_code(req: TanCreationRequest) -> list[TanCode]:
-    tans = []
-    for i in range(req.count):
-        new_tan = TanCode(code=generate_tan(), valid_from=req.valid_from, valid_to=req.valid_to)
-        tans.append(new_tan)
-
-    db = client.blocksembler
-    db.tans.insert_many([tan.model_dump() for tan in tans])
-
-    return tans
-
-
 @app.get("/logging/{tan_code}",
          response_model=list[LoggingEvent],
          status_code=status.HTTP_200_OK)
