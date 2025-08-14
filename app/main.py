@@ -23,7 +23,7 @@ BASE_URL = os.environ.get('BLOCKSEMBLER_API_BASE_URL', '')
 
 client = MongoClient(DB_URL, DB_PORT)
 
-if os.environ.get('DEBUG', True):
+if bool(os.environ.get('DEBUG', False)):
     app = FastAPI(root_path=BASE_URL)
 else:
     app = FastAPI(root_path=BASE_URL, docs_url=None, redoc_url=None, openapi_url=None)
