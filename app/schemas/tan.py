@@ -1,7 +1,6 @@
 from datetime import datetime
-from typing import Any
 
-from pydantic import BaseModel, Field, Json
+from pydantic import BaseModel, Field
 
 
 class TanCreationRequest(BaseModel):
@@ -16,10 +15,3 @@ class TanCode(BaseModel):
     valid_from: datetime = Field(description="The date and time from which the TAN code becomes valid.",
                                  default_factory=datetime.now)
     valid_to: datetime | None = Field(description="The date and time until the TAN code remains valid.")
-
-
-class LoggingEvent(BaseModel):
-    timestamp: datetime = Field(description="The date and time of the log", default_factory=datetime.now)
-    source: str = Field(description="Source of the log")
-    type: str = Field(description="Logging type")
-    payload: Json[Any] = Field(description="Logging payload", default_factory=dict)
