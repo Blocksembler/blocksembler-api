@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, async_sessi
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 DATABASE_URL = os.getenv(
-    "BLOCKSEMBLER_DB_URL",
-    "postgresql+asyncpg://postgres:mys3cr3t@localhost:5432/blocksembler"
+    "DB_CONNECTION_STRING",
+    "sqlite:///:memory:"
 )
 
 engine: AsyncEngine = create_async_engine(DATABASE_URL, echo=True, future=True)
