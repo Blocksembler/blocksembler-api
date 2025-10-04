@@ -1,36 +1,17 @@
 import os
-from typing import Optional
 
-from pymongo import AsyncMongoClient
-from pymongo.asynchronous.database import AsyncDatabase
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, async_sessionmaker
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-MONGO_URI = os.environ.get("BLOCKSEMBLER_API_DB_URL", "mongodb://localhost:27017")
-MONGO_DB_NAME = os.environ.get("BLOCKSEMBLER_API_DB_NAME", "blocksembler")
+DATABASE_URL = os.getenv(
+    "DB_CONNECTION_STRING",
+    "sqlite:///:memory:"
+)
 
-_client: Optional[AsyncMongoClient] = None
-_db: Optional[AsyncDatabase] = None
-
-
-async def get_client():
-    global _client
-
-    if _client is None:
-        _client = AsyncMongoClient(MONGO_URI)
-
-    return _client
+engine: AsyncEngine = create_async_engine(DATABASE_URL, echo=True, future=True)
+async_session_maker = async_sessionmaker(bind=engine, expire_on_commit=False)
 
 
-async def close_mongo_connection():
-    global _client
-    if _client is not None:
-        await _client.close()
-
-
-async def get_db() -> AsyncDatabase:
-    global _db
-
-    if _db is None:
-        client = await get_client()
-        _db = client[MONGO_DB_NAME]
-
-    return _db
+async def get_session() -> AsyncSession:
+    async with async_session_maker() as session:
+        yield session
