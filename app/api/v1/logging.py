@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from fastapi import HTTPException, APIRouter, status, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,7 +43,7 @@ async def post_logging_events(tan_code: str, events: list[LoggingEventBase],
     if not tan:
         raise HTTPException(status_code=404, detail="TAN code not found")
 
-    now = datetime.now()
+    now = datetime.datetime.now(datetime.UTC)
 
     if tan.valid_from and tan.valid_from > now:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid TAN code")
