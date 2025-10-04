@@ -1,10 +1,12 @@
 from datetime import datetime
 
-from fastapi import HTTPException, APIRouter, status
+from fastapi import HTTPException, APIRouter, status, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
-from app.database import get_db
-from app.schemas.logging import LoggingEvent
-from app.schemas.tan import TanCode
+from app.database import get_session
+from app.models.logging import LoggingEvent, LoggingEventBase
+from app.models.tan import TAN
 
 router = APIRouter(
     prefix="/logging",
@@ -13,73 +15,47 @@ router = APIRouter(
 
 
 @router.get("/{tan_code}",
-            response_model=list[LoggingEvent],
+            response_model=list[LoggingEventBase],
             status_code=status.HTTP_200_OK)
-async def get_logging_events(tan_code: str) -> list[LoggingEvent]:
-    db = await get_db()
-    tan_result = await db.tans.find_one({'code': tan_code})
+async def get_logging_events(tan_code: str, session: AsyncSession = Depends(get_session)) -> list[LoggingEvent]:
+    statement = select(TAN).where(TAN.code == tan_code)
+    result = await session.execute(statement)
+    tan = result.scalars().first()
 
-    if not tan_result:
+    if not tan:
         raise HTTPException(status_code=404, detail="TAN code not found")
 
-    query = {
-        'tan_code': tan_code,
-    }
+    statement = select(LoggingEvent).where(LoggingEvent.tan_code == tan_code)
+    result = await session.execute(statement)
 
-    events = await db.logging_events.find(query).sort('ts', -1).to_list()
-
-    return [LoggingEvent(**event) for event in events]
-
-
-@router.get("/{tan_code}/latest",
-            response_model=LoggingEvent,
-            status_code=status.HTTP_200_OK)
-async def get_latest_logging_event(tan_code: str) -> LoggingEvent:
-    # Verify that the TAN code exists
-    db = await get_db()
-    tan_result = await db.tans.find_one({'code': tan_code})
-
-    if not tan_result:
-        raise HTTPException(status_code=404, detail="TAN code not found")
-
-    # Query for the latest event
-    latest_event = await db.logging_events.find_one(
-        {'tan_code': tan_code},
-        sort=[('ts', -1)]  # Sort by timestamp descending
-    )
-
-    if not latest_event:
-        raise HTTPException(status_code=404, detail="No logging events found for this TAN code")
-
-    return LoggingEvent(**latest_event)
+    return [event for event in result.scalars().all()]
 
 
 @router.post("/{tan_code}",
              response_model=int,
              status_code=status.HTTP_201_CREATED)
-async def post_logging_events(tan_code: str, events: list[LoggingEvent]) -> int:
-    db = await get_db()
-    tan_result = await db.tans.find_one({'code': tan_code})
+async def post_logging_events(tan_code: str, events: list[LoggingEventBase],
+                              session: AsyncSession = Depends(get_session)) -> int:
+    statement = select(TAN).where(TAN.code == tan_code)
+    result = await session.execute(statement)
+    tan = result.scalars().first()
 
-    if not tan_result:
+    if not tan:
         raise HTTPException(status_code=404, detail="TAN code not found")
 
-    tan = TanCode(**tan_result)
     now = datetime.now()
 
-    if tan.valid_from > now:
+    if tan.valid_from and tan.valid_from > now:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid TAN code")
 
     if tan.valid_to and tan.valid_to < now:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f"TAN code expired on {tan.valid_to}")
 
-    events_to_insert = []
     for event in events:
-        event_dict = event.model_dump()
-        event_dict['tan_code'] = tan_code
-        events_to_insert.append(event_dict)
+        event.tan_code = tan_code
 
-    if events_to_insert:
-        result = await db.logging_events.insert_many(events_to_insert)
-        return len(result.inserted_ids)
+    if events:
+        session.add_all([LoggingEvent(**event.model_dump()) for event in events])
+        await session.commit()
+        return len(events)
     return 0
