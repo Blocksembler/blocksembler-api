@@ -1,6 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+import logging
 
-from app.database import get_db
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_session
 
 router = APIRouter(
     prefix="/health",
@@ -9,10 +13,11 @@ router = APIRouter(
 
 
 @router.get("/")
-async def health_check() -> dict:
+async def health_check(session: AsyncSession = Depends(get_session)) -> dict:
     try:
-        db = await get_db()
-        await db.command("ping")
+        result = await session.execute(text("SELECT 1"))
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        logging.error(e)
+        raise HTTPException(status_code=500, detail="Database connection error")
+
     return {"status": "ok"}
