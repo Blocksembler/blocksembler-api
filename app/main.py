@@ -1,12 +1,19 @@
-import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import health, logging, tan
+from app.api.v1 import health, logging, tan, exercise
+from app.config import BASE_URL, DEBUG, ORIGINS
+from app.database import create_tables
 
-origins = os.environ.get("BLOCKSEMBLER_ORIGINS", "*").split(',')
-BASE_URL = os.environ.get('BLOCKSEMBLER_API_BASE_URL', '')
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    print("create tables ...")
+    await create_tables()
+    print("create tables [done]")
+    yield
 
 
 if DEBUG:
@@ -16,7 +23,7 @@ else:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,3 +32,4 @@ app.add_middleware(
 app.include_router(tan.router)
 app.include_router(health.router)
 app.include_router(logging.router)
+app.include_router(exercise.router)
