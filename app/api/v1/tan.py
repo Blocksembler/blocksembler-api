@@ -1,11 +1,10 @@
-from typing import Any
-
 from fastapi import APIRouter, HTTPException, status, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
-from app.database import get_session
-from app.models.tan import TAN
+from app.api.schema.tan import TanRead
+from app.db.database import get_session
+from app.db.model.tan import Tan
 
 router = APIRouter(
     prefix="/tan",
@@ -14,14 +13,14 @@ router = APIRouter(
 
 
 @router.get("/{code}",
-            response_model=TAN,
+            response_model=TanRead,
             status_code=status.HTTP_200_OK)
-async def get_tan_code(code: str, session: AsyncSession = Depends(get_session)) -> Any:
-    statement = select(TAN).where(TAN.code == code)
+async def get_tan_code(code: str, session: AsyncSession = Depends(get_session)) -> TanRead:
+    statement = select(Tan).where(Tan.code == code)
     result = await session.execute(statement)
     tan = result.scalars().first()
 
     if not tan:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    return tan
+    return TanRead(**tan.to_dict())

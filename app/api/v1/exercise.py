@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 
-from app.database import get_session
-from app.models.exercise import ExerciseBase, Exercise
+from app.api.schema.exercise import ExerciseRead, ExerciseCreate
+from app.db.database import get_session
+from app.db.model.exercise import Exercise
 
 router = APIRouter(
     prefix="/exercise",
@@ -13,9 +14,9 @@ router = APIRouter(
 
 
 @router.get("/{exercise_id}",
-            response_model=ExerciseBase,
+            response_model=ExerciseRead,
             status_code=status.HTTP_200_OK)
-async def get_exercise(exercise_id: int, session: AsyncSession = Depends(get_session)) -> ExerciseBase:
+async def get_exercise(exercise_id: int, session: AsyncSession = Depends(get_session)) -> ExerciseRead:
     statement = select(Exercise).where(Exercise.id == exercise_id)
     result = await session.execute(statement)
     exercise = result.scalars().first()
@@ -23,15 +24,15 @@ async def get_exercise(exercise_id: int, session: AsyncSession = Depends(get_ses
     if not exercise:
         raise HTTPException(status_code=404, detail="Exercise not found")
 
-    return exercise
+    return ExerciseRead(**exercise.to_dict())
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ExerciseBase)
-async def create_exercise(exercise: ExerciseBase, session: AsyncSession = Depends(get_session)):
-    db_exercise = Exercise(**exercise.model_dump())
-    db_exercise.id = None
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ExerciseRead)
+async def create_exercise(new_exercise: ExerciseCreate, session: AsyncSession = Depends(get_session)) -> ExerciseRead:
+    exercise = Exercise(**new_exercise.model_dump())
+    exercise.id = None
 
-    session.add(db_exercise)
+    session.add(exercise)
     await session.commit()
 
-    return db_exercise
+    return ExerciseRead(**exercise.to_dict())
