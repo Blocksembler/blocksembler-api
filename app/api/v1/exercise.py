@@ -34,5 +34,6 @@ async def create_exercise(new_exercise: ExerciseCreate, session: AsyncSession = 
 
     session.add(exercise)
     await session.commit()
+    await session.refresh(exercise)
 
     return ExerciseRead(**exercise.to_dict())
