@@ -8,8 +8,9 @@ from app.api.v1 import health, logging, tan
 origins = os.environ.get("BLOCKSEMBLER_ORIGINS", "*").split(',')
 BASE_URL = os.environ.get('BLOCKSEMBLER_API_BASE_URL', '')
 
-if os.environ.get('DEBUG', 'true').lower() == 'true':
-    app = FastAPI(root_path=BASE_URL)
+
+if DEBUG:
+    app = FastAPI(root_path=BASE_URL, lifespan=lifespan)
 else:
     app = FastAPI(root_path=BASE_URL, docs_url=None, redoc_url=None, openapi_url=None)
 
