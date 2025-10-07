@@ -27,6 +27,13 @@ async def get_exercise(exercise_id: int, session: AsyncSession = Depends(get_ses
     return ExerciseRead(**exercise.to_dict())
 
 
+@router.get("/current",
+            response_model=ExerciseRead,
+            status_code=status.HTTP_200_OK)
+async def get_current_exercise(session: AsyncSession = Depends(get_session)) -> ExerciseRead:
+    pass
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ExerciseRead)
 async def create_exercise(new_exercise: ExerciseCreate, session: AsyncSession = Depends(get_session)) -> ExerciseRead:
     exercise = Exercise(**new_exercise.model_dump())
