@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import health, logging_event, tan, exercise
+from app.api.v1 import health, logging_event, tan, exercise, grading
 from app.config import BASE_URL, DEBUG, ORIGINS
 from app.db.database import create_tables
 
@@ -33,3 +33,4 @@ app.include_router(tan.router)
 app.include_router(health.router)
 app.include_router(logging_event.router)
 app.include_router(exercise.router)
+app.include_router(grading.router)
