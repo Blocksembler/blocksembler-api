@@ -1,9 +1,9 @@
 import asyncio
 import datetime
 
+from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from starlette import status
 
 from app.db.database import Base, get_session
 from app.db.model import Exercise, Tan
