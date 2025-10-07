@@ -13,6 +13,7 @@ class LoggingEvent(Base):
     source = sa.Column(sa.TEXT, nullable=True, default=None)
     type = sa.Column(sa.TEXT, nullable=True, default=None)
     payload = sa.Column(sa.JSON)
+    exercise_id = sa.Column(sa.INTEGER, sa.ForeignKey("exercise.id"), nullable=True)
 
     def to_dict(self):
         return {
@@ -22,4 +23,5 @@ class LoggingEvent(Base):
             "source": self.source,
             "type": self.type,
             "payload": str(self.payload),
+            "exercise_id": self.exercise_id,
         }

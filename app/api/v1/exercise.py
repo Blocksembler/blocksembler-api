@@ -1,3 +1,6 @@
+import datetime
+
+import sqlalchemy as sa
 from fastapi import APIRouter, HTTPException, status
 from fastapi.params import Depends
 from sqlalchemy import select
@@ -5,12 +8,92 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schema.exercise import ExerciseRead, ExerciseCreate
 from app.db.database import get_session
-from app.db.model.exercise import Exercise
+from app.db.model import Tan
+from app.db.model.exercise import Exercise, ExerciseProgress, Competition
 
 router = APIRouter(
     prefix="/exercise",
     tags=["exercise"],
 )
+
+
+@router.get("/current",
+            response_model=ExerciseRead,
+            status_code=status.HTTP_200_OK)
+async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(get_session)) -> ExerciseRead:
+    statement = select(Tan).where(Tan.code == tan_code)
+    result = await session.execute(statement)
+    tan = result.scalars().first()
+
+    if not tan:
+        raise HTTPException(status_code=404, detail="TAN code not found")
+
+    statement = (select(Exercise)
+                 .where(Exercise.id == (select(ExerciseProgress.exercise_id)
+                                        .where(sa.and_(ExerciseProgress.tan_code == tan_code,
+                                                       ExerciseProgress.end_time.is_(None)))
+                                        .scalar_subquery())))
+
+    result = await session.execute(statement)
+    exercise = result.scalars().first()
+
+    if not exercise:
+        subquery = (
+            select(ExerciseProgress.exercise_id)
+            .where(ExerciseProgress.tan_code.like(tan_code))
+        )
+
+        stmt = (
+            select(Exercise)
+            .where(sa.and_(
+                ExerciseProgress.tan_code.like(tan_code)),
+                ~Exercise.next_exercise_id.in_(subquery),
+                Exercise.id.in_(subquery)
+            )
+        )
+
+        result = await session.execute(stmt)
+        last_exercise = result.scalars().first()
+
+        if last_exercise:
+            ep = ExerciseProgress(
+                tan_code=tan_code,
+                exercise_id=last_exercise.next_exercise_id,
+                start_time=datetime.datetime.now(),
+                skipped=False
+            )
+            session.add(ep)
+            await session.commit()
+            await session.refresh(last_exercise)
+
+            stmt = select(Exercise).where(Exercise.id == last_exercise.next_exercise_id)
+            result = await session.execute(stmt)
+            exercise = result.scalars().first()
+            return ExerciseRead(**exercise.to_dict())
+
+        else:
+            stmt = (select(Competition)
+                    .join(Tan, Tan.competition_id == Competition.id)
+                    .where(Tan.code == tan_code))
+            result = await session.execute(stmt)
+            first_exercise_id = result.scalars().first().first_exercise_id
+
+            ep = ExerciseProgress(
+                tan_code=tan_code,
+                exercise_id=first_exercise_id,
+                start_time=datetime.datetime.now(),
+                skipped=False
+            )
+
+            session.add(ep)
+            await session.commit()
+
+            stmt = select(Exercise).where(Exercise.id == first_exercise_id)
+            result = await session.execute(stmt)
+            exercise = result.scalars().first()
+            return ExerciseRead(**exercise.to_dict())
+
+    return ExerciseRead(**exercise.to_dict())
 
 
 @router.get("/{exercise_id}",
@@ -25,13 +108,6 @@ async def get_exercise(exercise_id: int, session: AsyncSession = Depends(get_ses
         raise HTTPException(status_code=404, detail="Exercise not found")
 
     return ExerciseRead(**exercise.to_dict())
-
-
-@router.get("/current",
-            response_model=ExerciseRead,
-            status_code=status.HTTP_200_OK)
-async def get_current_exercise(session: AsyncSession = Depends(get_session)) -> ExerciseRead:
-    pass
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ExerciseRead)
