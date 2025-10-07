@@ -10,6 +10,7 @@ class LoggingEventCreate(BaseModel):
     source: Optional[str]
     type: Optional[str]
     payload: Json
+    exercise_id: Optional[int]
 
 
 class LoggingEventRead(LoggingEventCreate):
