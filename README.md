@@ -1,37 +1,84 @@
+## <img src="img/logo.png" alt="drawing" width="200"/>
+
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC_BY--NC--ND_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+
 # Blocksembler REST API
 
-This is the Blocksembler backend API powered by FastAPI, designed to handle and store logging events for the
-Blocksembler platform.
+This is the Blocksembler Backend API powered by FastAPI, designed to handle and store logging events, exercises and
+automatic grading of exercise submissions.
 
-## Setup
+## Getting Started
 
-### Prerequisites
+### Run from Source
 
-- Docker
+To get started with the Assembler Programming Learning Environment, follow these steps:
 
-### Installation
+1. **Clone the Repository**: Clone this repository to your local machine using
 
-```shell
-docker run --name blocksembler-api --port 80 blocksembler-api:latest
-```
+   ```bash
+    git clone https://github.com/Blocksembler/blocksembler-api.git
+   ```
+
+2. **Create and activate a new Virtual Environment**: Navigate to the project directory and execute following command
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
+3. **Install requirements**: Install all python packages required for this application
+   ```bash
+   pip install -r requirements
+   ```
+
+4. **Run the Application**: Start the application by running following command:
+   ```bash
+   fastapi run app/main.py --port 8081 --host=0.0.0.0
+   ```
+
+   This will launch the backend locally. In case the DEBUG environment variable is set to `true` the swagger ui can be
+   accessed on [http://localhost:8081/docs](http://localhost:8081/docs).
+
+### Run from Docker Image
+
+Blocksembler is also available on [Docker Hub](https://hub.docker.com/r/blocksembler/blocksembler-frontend/tags). To get
+started, follow these steps:
+
+1. **Pull Docker Image**: Pull the blocksembler/blocksembler-frontend image
+   `docker pull blocksembler/blocksembler-api:latest`
+
+2. **Run the Container**: Start up a new container instance that runs the blocksembler application
+   `docker run blocksembler/blocksembler-api:latest -p 8081:8081 -d`. This will launch the application locally. In case
+   the DEBUG environment variable is set to `true` the swagger ui can be accessed
+   on [http://localhost:8081/docs](http://localhost:8081/docs).
 
 ### Environment Variables
 
-| Name                        | Default                                                              | Description                                              |
-|-----------------------------|----------------------------------------------------------------------|----------------------------------------------------------|
-| `DEBUG`                     | `True`                                                               | Runs the API in debug mode, enabling detailed error logs |
-| `BLOCKSEMBLER_API_URI`      | `postgresql+asyncpg://postgres:postgres@localhost:5432/blocksembler` | Host address of the MongoDB instance (e.g., `localhost`) |
-| `BLOCKSEMBLER_API_BASE_URL` | `/`                                                                  | Base URL path under which this API is served             |
-| `BLOCKSEMBLER_ORIGINS`      | `*`                                                                  | Allowed Origins                                          |
+#### Genearl Settings
+
+| Name                        | Default | Description                                              |
+|-----------------------------|---------|----------------------------------------------------------|
+| `DEBUG`                     | `True`  | Runs the API in debug mode, enabling detailed error logs |
+| `BLOCKSEMBLER_ORIGINS`      | `*`     | Allowed Origins                                          |
+| `BLOCKSEMBLER_API_BASE_URL` | `/`     | Base URL path under which this API is served             |
+
+#### Database Settings
+
+| Name                  | Default                                                              | Description                                                 |
+|-----------------------|----------------------------------------------------------------------|-------------------------------------------------------------|
+| `BLOCKSEMBLER_DB_URI` | `postgresql+asyncpg://postgres:postgres@localhost:5432/blocksembler` | Host address of the *postgres* instance (e.g., `localhost`) |
+
+#### Message Queue Settings
+
+| Name                                      | Default              | Description                                                                          |
+|-------------------------------------------|----------------------|--------------------------------------------------------------------------------------|
+| `BLOCKSEMBLER_MESSAGE_QUEUE_URL`          | `localhost`          | URL of the RabbitMQ message broker used for communication between services.          |
+| `BLOCKSEMBLER_MESSAGE_QUEUE_USER`         | `blocksembler`       | Username used to authenticate with the RabbitMQ message broker.                      |
+| `BLOCKSEMBLER_MESSAGE_QUEUE_PASSWORD`     | `blocksembler`       | Password used to authenticate with the RabbitMQ message broker.                      |
+| `BLOCKSEMBLER_GRADING_RESPONSE_QUEUE_TTL` | `1000*60*15 (15min)` | Time-to-live (TTL) in milliseconds for grading response queues before auto-deletion. |
 
 ## Contributing
 
-Contributions are welcome! To get started:
-
-- Fork the repository
-- Create a new branch (git checkout -b feature/your-feature)
-- Make your changes
-- Open a pull request
+Contributions to this project are welcome! If you have ideas for new features, improvements, or bug fixes, feel free to
+open an issue or submit a pull request.
 
 ## Contact
 

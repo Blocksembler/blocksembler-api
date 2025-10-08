@@ -14,7 +14,7 @@ class Base(DeclarativeBase):
 
 async def get_session() -> AsyncSession:
     async with async_session_maker() as session:
-        yield session
+        yield session  # noqa
 
 
 async def create_tables():
