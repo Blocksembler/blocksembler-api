@@ -4,7 +4,7 @@ import logging
 from uuid import uuid4
 
 import amqp
-from amqp import Connection
+from amqp import Channel
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi import status
 from sqlalchemy import select
@@ -15,7 +15,7 @@ from app.config import GRADING_RESPONSE_QUEUE_TTL
 from app.db.database import get_session
 from app.db.model.exercise import ExerciseProgress
 from app.db.model.grading import GradingJob
-from app.mq.message_queue import get_mq_connection
+from app.mq.message_queue import get_mq_channel
 
 router = APIRouter(
     prefix="/submission",
@@ -23,9 +23,7 @@ router = APIRouter(
 )
 
 
-async def submit_grading_job(job_msg: dict, session: AsyncSession, mq_connection: Connection):
-    ch = mq_connection.channel()
-
+async def submit_grading_job(job_msg: dict, session: AsyncSession, ch: Channel):
     ch.queue_declare(queue=f'grading_response.{job_msg["job_id"]}', durable=True, arguments={
         "x-expires": GRADING_RESPONSE_QUEUE_TTL,
     })
@@ -44,7 +42,7 @@ async def submit_grading_job(job_msg: dict, session: AsyncSession, mq_connection
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=str)
 async def create_submission(new_submission: ExerciseSubmission, session: AsyncSession = Depends(get_session),
-                            mq_connection: Connection = Depends(get_mq_connection)) -> str:
+                            mq_channel: Channel = Depends(get_mq_channel)) -> str:
     stmt = select(ExerciseProgress).where(ExerciseProgress.exercise_id == new_submission.exercise_id,
                                           ExerciseProgress.tan_code == new_submission.tan_code,
                                           ExerciseProgress.end_time.is_(None))
@@ -62,7 +60,7 @@ async def create_submission(new_submission: ExerciseSubmission, session: AsyncSe
             "solution_code": new_submission.solution_code
         }
 
-        await submit_grading_job(job_msg, session, mq_connection)
+        await submit_grading_job(job_msg, session, mq_channel)
         await session.commit()
 
         return str(job_msg["job_id"])
