@@ -13,3 +13,20 @@ class ExerciseCreate(BaseModel):
 
 class ExerciseRead(ExerciseCreate):
     id: int
+
+
+class SystemState(BaseModel):
+    registers: dict[str, int]
+    memory: dict[int, int]
+
+
+class TestCaseCreate(BaseModel):
+    title: str
+    precondition: SystemState
+    postcondition: SystemState
+    user_input: list[str]
+    expected_output: list[str]
+
+
+class TestCaseRead(TestCaseCreate):
+    id: int

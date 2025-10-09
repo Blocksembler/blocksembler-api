@@ -6,10 +6,10 @@ from fastapi.params import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schema.exercise import ExerciseRead, ExerciseCreate
+from app.api.schema.exercise import ExerciseRead, ExerciseCreate, TestCaseRead, TestCaseCreate
 from app.db.database import get_session
 from app.db.model import Tan
-from app.db.model.exercise import Exercise, ExerciseProgress, Competition
+from app.db.model.exercise import Exercise, ExerciseProgress, Competition, TestCase
 
 router = APIRouter(
     prefix="/exercise",
@@ -121,3 +121,24 @@ async def create_exercise(new_exercise: ExerciseCreate, session: AsyncSession = 
     await session.refresh(exercise)
 
     return ExerciseRead(**exercise.to_dict())
+
+
+@router.post("/{exercise_id}/test-case", response_model=TestCaseRead)
+async def create_test_case(exercise_id: int, new_test_case: TestCaseCreate,
+                           session: AsyncSession = Depends(get_session)) -> TestCaseRead:
+    test_case = TestCase(exercise_id=exercise_id, **new_test_case.model_dump())
+    session.add(test_case)
+    await session.commit()
+
+    await session.refresh(test_case)
+
+    return TestCaseRead(**test_case.to_dict())
+
+
+@router.get("/{exercise_id}/test-case", response_model=list[TestCaseRead], status_code=status.HTTP_200_OK)
+async def get_test_cases(exercise_id: int, session: AsyncSession = Depends(get_session)) -> list[TestCaseRead]:
+    statement = select(TestCase).where(TestCase.exercise_id == exercise_id)
+    result = await session.execute(statement)
+    test_cases = result.scalars().all()
+
+    return [TestCaseRead(**case.to_dict()) for case in test_cases]
