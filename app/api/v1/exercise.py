@@ -45,6 +45,7 @@ async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(ge
 
         stmt = (
             select(Exercise)
+            .join(ExerciseProgress, ExerciseProgress.exercise_id == Exercise.id)
             .where(sa.and_(
                 ExerciseProgress.tan_code.like(tan_code)),
                 ~Exercise.next_exercise_id.in_(subquery),
