@@ -12,3 +12,5 @@ class GradingJob(Base):
     status = sa.Column(sa.VARCHAR(20))
     started = sa.Column(sa.DateTime(timezone=True))
     terminated = sa.Column(sa.DateTime(timezone=True), nullable=True)
+    passed = sa.Column(sa.BOOLEAN, nullable=True)
+    feedback = sa.Column(sa.JSON, nullable=True)
