@@ -23,7 +23,7 @@ class TestExercise:
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/exercise/1")
+        response = client.get("/exercises/1")
 
         assert response.json() == EXERCISES[0]
         assert response.status_code == 200
@@ -40,7 +40,7 @@ class TestExercise:
             "next_exercise_id": None,
         }
 
-        response = client.post("/exercise", json=new_exercise)
+        response = client.post("/exercises", json=new_exercise)
         result_exercise = response.json()
 
         print(result_exercise)
@@ -55,7 +55,7 @@ class TestExercise:
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/exercise/current", params={"tan_code": "test-tan-1"})
+        response = client.get("/exercises/current", params={"tan_code": "test-tan-1"})
 
         assert response.status_code == 200
         assert response.json() == EXERCISES[1]
@@ -64,7 +64,7 @@ class TestExercise:
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/exercise/current", params={"tan_code": "non-existing-tan"})
+        response = client.get("/exercises/current", params={"tan_code": "non-existing-tan"})
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -72,7 +72,7 @@ class TestExercise:
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/exercise/current", params={"tan_code": "test-tan-2"})
+        response = client.get("/exercises/current", params={"tan_code": "test-tan-2"})
 
         assert response.status_code == 200
         assert response.json() == EXERCISES[2]
@@ -81,7 +81,7 @@ class TestExercise:
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/exercise/current", params={"tan_code": "test-tan-3"})
+        response = client.get("/exercises/current", params={"tan_code": "test-tan-3"})
 
         assert response.status_code == 200
         assert response.json() == EXERCISES[0]
@@ -110,7 +110,7 @@ class TestExercise:
             "expected_output": ["30"]
         }
 
-        response = client.post("/exercise/1/test-case", json=new_test_case)
+        response = client.post("/exercises/1/test-cases", json=new_test_case)
 
         result_test_case = response.json()
 
@@ -126,7 +126,7 @@ class TestExercise:
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/exercise/2/test-case")
+        response = client.get("/exercises/2/test-cases")
         result_test_cases = response.json()
 
         expected_test_case = {

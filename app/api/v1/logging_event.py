@@ -10,8 +10,8 @@ from app.db.model.logging_event import LoggingEvent
 from app.db.model.tan import Tan
 
 router = APIRouter(
-    prefix="/logging-event",
-    tags=["logging event"],
+    prefix="/logging-events",
+    tags=["logging events"],
 )
 
 
