@@ -87,3 +87,27 @@ EXERCISE_PROGRESS_ENTRIES = [
         "skipped": False
     },
 ]
+
+EXERCISE_TEST_CASES = {
+    2: [
+        {
+            "title": "read val to r1 and r2 and store sum in r3 + output",
+            "precondition": {
+                "registers": {
+                    "pc": 0,
+                },
+                "memory": {}
+            },
+            "postcondition": {
+                "registers": {
+                    "r1": 10,
+                    "r2": 20,
+                    "r3": 30,
+                },
+                "memory": {}
+            },
+            "user_input": ["10", "20"],
+            "expected_output": ["30"]
+        }
+    ]
+}

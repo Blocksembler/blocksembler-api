@@ -24,6 +24,29 @@ class Exercise(Base):
         }
 
 
+class TestCase(Base):
+    __tablename__ = "test_case"
+
+    id = sa.Column(sa.INTEGER, default=None, primary_key=True)
+    exercise_id = sa.Column(sa.INTEGER, sa.ForeignKey("exercise.id"), nullable=False)
+    title = sa.Column(sa.TEXT, nullable=False)
+    precondition = sa.Column(sa.JSON, nullable=False)
+    postcondition = sa.Column(sa.JSON, nullable=False)
+    user_input = sa.Column(sa.JSON, nullable=False)
+    expected_output = sa.Column(sa.JSON, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "exercise_id": self.exercise_id,
+            "title": self.title,
+            "precondition": self.precondition,
+            "postcondition": self.postcondition,
+            "user_input": self.user_input,
+            "expected_output": self.expected_output,
+        }
+
+
 class ExerciseProgress(Base):
     __tablename__ = "exercise_progress"
     __table_args__ = (

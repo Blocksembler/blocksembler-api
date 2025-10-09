@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, async_sessionmaker
 
 from app.db.database import Base
 from app.db.model import Exercise, Tan
-from app.db.model.exercise import ExerciseProgress, Competition
-from tests.util.demo_data import COMPETITIONS, TANS, EXERCISES, EXERCISE_PROGRESS_ENTRIES
+from app.db.model.exercise import ExerciseProgress, Competition, TestCase
+from tests.util.demo_data import COMPETITIONS, TANS, EXERCISES, EXERCISE_PROGRESS_ENTRIES, EXERCISE_TEST_CASES
 
 DB_URI = "sqlite+aiosqlite:///:memory:"
 
@@ -35,6 +35,10 @@ async def insert_all_records(session_factory: async_sessionmaker):
         for exercise_progress in EXERCISE_PROGRESS_ENTRIES:
             await insert_exercise_progress(session, exercise_progress)
 
+        for exercise_id in EXERCISE_TEST_CASES:
+            for test_case in EXERCISE_TEST_CASES[exercise_id]:
+                await insert_exercise_test_case(session, exercise_id, test_case)
+
 
 async def insert_exercise(session: AsyncSession, exercise: dict) -> None:
     exercise = Exercise(**exercise)
@@ -57,4 +61,10 @@ async def insert_tan(session: AsyncSession, tan: dict) -> None:
 async def insert_competition(session: AsyncSession, competition: dict) -> None:
     competition = Competition(**competition)
     session.add(competition)
+    await session.commit()
+
+
+async def insert_exercise_test_case(session: AsyncSession, exercise_id: int, test_case: dict) -> None:
+    test_case = TestCase(exercise_id=exercise_id, **test_case)
+    session.add(test_case)
     await session.commit()
