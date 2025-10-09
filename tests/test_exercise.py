@@ -85,3 +85,75 @@ class TestExercise:
 
         assert response.status_code == 200
         assert response.json() == EXERCISES[0]
+
+    def test_post_test_case(self):
+        app.dependency_overrides[get_session] = get_override_dependency(self.engine)
+        client = TestClient(app)
+
+        new_test_case = {
+            "title": "read val to r1 and r2 and store sum in r3 + output",
+            "precondition": {
+                "registers": {
+                    "pc": 0,
+                },
+                "memory": {}
+            },
+            "postcondition": {
+                "registers": {
+                    "r1": 10,
+                    "r2": 20,
+                    "r3": 30,
+                },
+                "memory": {}
+            },
+            "user_input": ["10", "20"],
+            "expected_output": ["30"]
+        }
+
+        response = client.post("/exercise/1/test-case", json=new_test_case)
+
+        result_test_case = response.json()
+
+        assert response.status_code == 200
+        assert result_test_case["title"] == new_test_case["title"]
+        assert result_test_case["precondition"] == new_test_case["precondition"]
+        assert result_test_case["postcondition"] == new_test_case["postcondition"]
+        assert result_test_case["user_input"] == new_test_case["user_input"]
+        assert result_test_case["expected_output"] == new_test_case["expected_output"]
+        assert "id" in result_test_case
+
+    def test_get_test_case(self):
+        app.dependency_overrides[get_session] = get_override_dependency(self.engine)
+        client = TestClient(app)
+
+        response = client.get("/exercise/2/test-case")
+        result_test_cases = response.json()
+
+        expected_test_case = {
+            "title": "read val to r1 and r2 and store sum in r3 + output",
+            "precondition": {
+                "registers": {
+                    "pc": 0,
+                },
+                "memory": {}
+            },
+            "postcondition": {
+                "registers": {
+                    "r1": 10,
+                    "r2": 20,
+                    "r3": 30,
+                },
+                "memory": {}
+            },
+            "user_input": ["10", "20"],
+            "expected_output": ["30"]
+        }
+
+        assert response.status_code == 200
+        assert len(result_test_cases) == 1
+        assert result_test_cases[0]["title"] == expected_test_case["title"]
+        assert result_test_cases[0]["precondition"] == expected_test_case["precondition"]
+        assert result_test_cases[0]["postcondition"] == expected_test_case["postcondition"]
+        assert result_test_cases[0]["user_input"] == expected_test_case["user_input"]
+        assert result_test_cases[0]["expected_output"] == expected_test_case["expected_output"]
+        assert "id" in result_test_cases[0]
