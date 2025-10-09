@@ -69,3 +69,8 @@ async def create_submission(new_submission: ExerciseSubmission, session: AsyncSe
         logging.error(e)
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Scheduling a grading job failed. {str(e)}")
+
+
+@router.get("/{job_id}/logs")
+async def get_submission_logs(job_id: str) -> str:
+    return "job done"
