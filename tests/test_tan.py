@@ -27,7 +27,7 @@ class TestTan:
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/tan/123456")
+        response = client.get("/tans/123456")
 
         assert response.json() == {"code": "123456", "valid_from": None, "valid_to": None}
         assert response.status_code == 200
@@ -36,6 +36,6 @@ class TestTan:
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/tan/not-existing-tan")
+        response = client.get("/tans/not-existing-tan")
 
         assert response.status_code == 404

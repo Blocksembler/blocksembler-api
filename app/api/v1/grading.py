@@ -18,8 +18,8 @@ from app.db.model.grading import GradingJob
 from app.mq.message_queue import get_mq_channel
 
 router = APIRouter(
-    prefix="/submission",
-    tags=["submission"],
+    prefix="/submissions",
+    tags=["submissions"],
 )
 
 

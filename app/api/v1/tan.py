@@ -7,7 +7,7 @@ from app.db.database import get_session
 from app.db.model.tan import Tan
 
 router = APIRouter(
-    prefix="/tan",
+    prefix="/tans",
     tags=["tan"],
 )
 

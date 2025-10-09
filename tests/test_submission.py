@@ -38,7 +38,7 @@ class TestSubmission:
             "solution_code": "addi r0 r0 r0"
         }
 
-        response = client.post("/submission", json=submission)
+        response = client.post("/submissions", json=submission)
 
         print(response.json())
 
@@ -65,7 +65,7 @@ class TestSubmission:
             "solution_code": "addi r0 r0 r0"
         }
 
-        response = client.post("/submission", json=submission)
+        response = client.post("/submissions", json=submission)
 
         print(response.json())
 
