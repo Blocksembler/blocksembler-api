@@ -12,8 +12,8 @@ from app.db.model import Tan
 from app.db.model.exercise import Exercise, ExerciseProgress, Competition, TestCase
 
 router = APIRouter(
-    prefix="/exercise",
-    tags=["exercise"],
+    prefix="/exercises",
+    tags=["exercises"],
 )
 
 
@@ -123,7 +123,7 @@ async def create_exercise(new_exercise: ExerciseCreate, session: AsyncSession = 
     return ExerciseRead(**exercise.to_dict())
 
 
-@router.post("/{exercise_id}/test-case", response_model=TestCaseRead)
+@router.post("/{exercise_id}/test-cases", response_model=TestCaseRead)
 async def create_test_case(exercise_id: int, new_test_case: TestCaseCreate,
                            session: AsyncSession = Depends(get_session)) -> TestCaseRead:
     test_case = TestCase(exercise_id=exercise_id, **new_test_case.model_dump())
@@ -135,7 +135,7 @@ async def create_test_case(exercise_id: int, new_test_case: TestCaseCreate,
     return TestCaseRead(**test_case.to_dict())
 
 
-@router.get("/{exercise_id}/test-case", response_model=list[TestCaseRead], status_code=status.HTTP_200_OK)
+@router.get("/{exercise_id}/test-cases", response_model=list[TestCaseRead], status_code=status.HTTP_200_OK)
 async def get_test_cases(exercise_id: int, session: AsyncSession = Depends(get_session)) -> list[TestCaseRead]:
     statement = select(TestCase).where(TestCase.exercise_id == exercise_id)
     result = await session.execute(statement)
