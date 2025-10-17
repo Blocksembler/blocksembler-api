@@ -1,7 +1,7 @@
 import datetime
 
 import sqlalchemy as sa
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Response
 from fastapi.params import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,7 +20,7 @@ router = APIRouter(
 @router.get("/current",
             response_model=ExerciseRead,
             status_code=status.HTTP_200_OK)
-async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(get_session)) -> ExerciseRead:
+async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(get_session)) -> ExerciseRead | Response:
     statement = select(Tan).where(Tan.code == tan_code)
     result = await session.execute(statement)
     tan = result.scalars().first()
@@ -38,25 +38,21 @@ async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(ge
     exercise = result.scalars().first()
 
     if not exercise:
-        subquery = (
-            select(ExerciseProgress.exercise_id)
-            .where(ExerciseProgress.tan_code.like(tan_code))
-        )
 
         stmt = (
             select(Exercise)
             .join(ExerciseProgress, ExerciseProgress.exercise_id == Exercise.id)
-            .where(sa.and_(
-                ExerciseProgress.tan_code.like(tan_code)),
-                ~Exercise.next_exercise_id.in_(subquery),
-                Exercise.id.in_(subquery)
-            )
+            .where(ExerciseProgress.tan_code.like(tan_code))
+            .order_by(ExerciseProgress.end_time.desc())
         )
 
         result = await session.execute(stmt)
         last_exercise = result.scalars().first()
 
         if last_exercise:
+            if last_exercise.next_exercise_id is None:
+                return Response(status_code=status.HTTP_204_NO_CONTENT)
+
             ep = ExerciseProgress(
                 tan_code=tan_code,
                 exercise_id=last_exercise.next_exercise_id,
