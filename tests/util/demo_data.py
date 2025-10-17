@@ -45,7 +45,7 @@ EXERCISES = [
     },
     {
         "id": 3,
-        "title": "Demo exercise 2",
+        "title": "Demo exercise 3",
         "markdown": "",
         "coding_mode": "bbp",
         "allow_skip_after": 0,
