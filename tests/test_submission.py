@@ -12,14 +12,12 @@ from app.mq.message_queue import get_mq_channel
 from tests.util.db_util import create_test_tables, get_override_dependency, insert_all_records, DB_URI
 
 
-def setup_mocks() -> (MagicMock, MagicMock):
-    mock_channel = MagicMock()
+def setup_mocks():
+    channel_mock = MagicMock()
     exchange_mock = MagicMock()
-    mock_channel.get_exchange = AsyncMock()
-    mock_channel.get_exchange.return_value(exchange_mock)
     exchange_mock.publish = AsyncMock()
-    return mock_channel, exchange_mock
-
+    channel_mock.get_exchange = AsyncMock(return_value=exchange_mock)
+    return channel_mock, exchange_mock
 
 class TestSubmission:
     def setup_method(self):
@@ -30,10 +28,10 @@ class TestSubmission:
         asyncio.run(insert_all_records(self.async_session))
 
     def test_post_submission(self):
-        mock_channel, exchange_mock = setup_mocks()
+        channel_mock, exchange_mock = setup_mocks()
 
         async def get_mq_connection_override() -> AbstractRobustChannel:
-            yield mock_channel  # noqa
+            yield channel_mock  # noqa
 
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         app.dependency_overrides[get_mq_channel] = get_mq_connection_override
@@ -51,13 +49,13 @@ class TestSubmission:
         print(response.json())
 
         assert response.status_code == status.HTTP_201_CREATED
-        exchange_mock.publish.awaited_once_with(ANY, routing_key='grading_jobs')
+        exchange_mock.publish.assert_awaited_once_with(ANY, routing_key='grading_jobs')
 
     def test_post_invalid_submission(self):
-        mock_channel, exchange_mock = setup_mocks()
+        channel_mock, exchange_mock = setup_mocks()
 
         async def get_mq_connection_override() -> AbstractRobustChannel:
-            yield mock_channel  # noqa
+            yield channel_mock  # noqa
 
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         app.dependency_overrides[get_mq_channel] = get_mq_connection_override
@@ -75,4 +73,5 @@ class TestSubmission:
         print(response.json())
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        channel_mock.get_exchange.assert_not_awaited()
         exchange_mock.publish.assert_not_awaited()
