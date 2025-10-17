@@ -68,12 +68,16 @@ started, follow these steps:
 
 #### Message Queue Settings
 
-| Name                                      | Default              | Description                                                                          |
-|-------------------------------------------|----------------------|--------------------------------------------------------------------------------------|
-| `BLOCKSEMBLER_MESSAGE_QUEUE_URL`          | `localhost`          | URL of the RabbitMQ message broker used for communication between services.          |
-| `BLOCKSEMBLER_MESSAGE_QUEUE_USER`         | `blocksembler`       | Username used to authenticate with the RabbitMQ message broker.                      |
-| `BLOCKSEMBLER_MESSAGE_QUEUE_PASSWORD`     | `blocksembler`       | Password used to authenticate with the RabbitMQ message broker.                      |
-| `BLOCKSEMBLER_GRADING_RESPONSE_QUEUE_TTL` | `1000*60*15 (15min)` | Time-to-live (TTL) in milliseconds for grading response queues before auto-deletion. |
+| Name                                      | Default                         | Description                                                     |
+|-------------------------------------------|---------------------------------|-----------------------------------------------------------------|
+| `BLOCKSEMBLER_MQ_URL`                     | `localhost`                     | Hostname or URL of the RabbitMQ broker.                         |
+| `BLOCKSEMBLER_MQ_PORT`                    | `5672`                          | Port on which the RabbitMQ broker is listening.                 |
+| `BLOCKSEMBLER_MQ_USER`                    | `blocksembler`                  | Username for authenticating with the RabbitMQ broker.           |
+| `BLOCKSEMBLER_MQ_PWD`                     | `blocksembler`                  | Password for authenticating with the RabbitMQ broker.           |
+| `BLOCKSEMBLER_MQ_EXCHANGE_NAME`           | `blocksembler-grading-exchange` | Name of the RabbitMQ exchange used for publishing grading jobs. |
+| `BLOCKSEMBLER_MQ_GRADING_JOB_QUEUE`       | `grading-jobs`                  | Name of the RabbitMQ queue that receives grading jobs.          |
+| `BLOCKSEMBLER_MQ_GRADING_JOB_ROUTING_KEY` | `grading.job.created`           | Routing key used to bind the grading job queue to the exchange. |
+|
 
 ## Contributing
 

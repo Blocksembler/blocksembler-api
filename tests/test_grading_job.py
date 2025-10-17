@@ -6,6 +6,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
+from app.config import GRADING_JOB_ROUTING_KEY
 from app.db.database import get_session
 from app.main import app
 from app.mq.message_queue import get_mq_channel
@@ -50,7 +51,7 @@ class TestGradingJob:
         print(response.json())
 
         assert response.status_code == status.HTTP_201_CREATED
-        exchange_mock.publish.assert_awaited_once_with(ANY, routing_key='grading_jobs')
+        exchange_mock.publish.assert_awaited_once_with(ANY, routing_key=GRADING_JOB_ROUTING_KEY)
 
     def test_post_invalid_submission(self):
         channel_mock, exchange_mock = setup_mocks()
