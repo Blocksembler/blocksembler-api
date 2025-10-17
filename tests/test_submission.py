@@ -1,7 +1,7 @@
 import asyncio
 from unittest.mock import MagicMock, ANY, AsyncMock
 
-from amqp import Connection
+from aio_pika.abc import AbstractRobustChannel
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
@@ -32,7 +32,7 @@ class TestSubmission:
     def test_post_submission(self):
         mock_channel, exchange_mock = setup_mocks()
 
-        async def get_mq_connection_override() -> Connection:
+        async def get_mq_connection_override() -> AbstractRobustChannel:
             yield mock_channel  # noqa
 
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
@@ -56,7 +56,7 @@ class TestSubmission:
     def test_post_invalid_submission(self):
         mock_channel, exchange_mock = setup_mocks()
 
-        async def get_mq_connection_override() -> Connection:
+        async def get_mq_connection_override() -> AbstractRobustChannel:
             yield mock_channel  # noqa
 
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
