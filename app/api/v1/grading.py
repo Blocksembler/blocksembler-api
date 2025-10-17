@@ -3,15 +3,15 @@ import json
 import logging
 from uuid import uuid4
 
-import amqp
-from amqp import Channel
+from aio_pika import Message
+from aio_pika.abc import AbstractRobustChannel
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schema.grading import ExerciseSubmission
-from app.config import GRADING_RESPONSE_QUEUE_TTL
+from app.api.schema.grading import ExerciseSubmission, GradingJobRead
+from app.config import MESSAGE_QUEUE_EXCHANGE_NAME
 from app.db.database import get_session
 from app.db.model.exercise import ExerciseProgress
 from app.db.model.grading import GradingJob
@@ -23,11 +23,7 @@ router = APIRouter(
 )
 
 
-async def submit_grading_job(job_msg: dict, session: AsyncSession, ch: Channel):
-    ch.queue_declare(queue=f'grading_response.{job_msg["job_id"]}', durable=True, arguments={
-        "x-expires": GRADING_RESPONSE_QUEUE_TTL,
-    })
-
+async def submit_grading_job(job_msg: dict, session: AsyncSession, ch: AbstractRobustChannel):
     session.add(GradingJob(
         id=job_msg["job_id"],
         tan_code=job_msg["tan_code"],
@@ -37,12 +33,14 @@ async def submit_grading_job(job_msg: dict, session: AsyncSession, ch: Channel):
     ))
 
     job_msg["job_id"] = str(job_msg["job_id"])
-    ch.basic_publish(amqp.Message(json.dumps(job_msg)), routing_key='grading_jobs')
+
+    exchange = await ch.get_exchange(MESSAGE_QUEUE_EXCHANGE_NAME)
+    await exchange.publish(Message(body=json.dumps(job_msg).encode('utf-8')), routing_key='grading_jobs')
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=str)
 async def create_submission(new_submission: ExerciseSubmission, session: AsyncSession = Depends(get_session),
-                            mq_channel: Channel = Depends(get_mq_channel)) -> str:
+                            mq_channel: AbstractRobustChannel = Depends(get_mq_channel)) -> str:
     stmt = select(ExerciseProgress).where(ExerciseProgress.exercise_id == new_submission.exercise_id,
                                           ExerciseProgress.tan_code == new_submission.tan_code,
                                           ExerciseProgress.end_time.is_(None))
@@ -69,3 +67,12 @@ async def create_submission(new_submission: ExerciseSubmission, session: AsyncSe
         logging.error(e)
         await session.rollback()
         raise HTTPException(status_code=500, detail=f"Scheduling a grading job failed. {str(e)}")
+
+
+@router.get("/{job_id}",
+            response_model=GradingJobRead,
+            status_code=status.HTTP_200_OK)
+async def get_submission_status(job_id: str, session: AsyncSession = Depends(get_session)) -> GradingJobRead:
+    stmt = select(GradingJob).where(GradingJob.id == job_id)
+    result = await session.execute(stmt)
+    return GradingJobRead(**result.scalars().first().to_dict())

@@ -1,8 +1,10 @@
-from amqp import Connection
+import aio_pika
+from aio_pika.abc import AbstractRobustChannel
 
-from app.config import MESSAGE_QUEUE_URL, MESSAGE_QUEUE_USER, MESSAGE_QUEUE_PASSWORD
 
+async def get_mq_channel() -> AbstractRobustChannel:
+    connection = await aio_pika.connect_robust("amqp://blocksembler:blocksembler@localhost:5672")
 
-async def get_mq_channel() -> Connection:
-    with Connection(MESSAGE_QUEUE_URL, userid=MESSAGE_QUEUE_USER, password=MESSAGE_QUEUE_PASSWORD) as c:
-        yield c.channel()  # noqa
+    async with connection:
+        channel = await connection.channel()
+        yield channel
