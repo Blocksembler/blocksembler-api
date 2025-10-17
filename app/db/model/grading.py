@@ -14,3 +14,15 @@ class GradingJob(Base):
     terminated = sa.Column(sa.DateTime(timezone=True), nullable=True)
     passed = sa.Column(sa.BOOLEAN, nullable=True)
     feedback = sa.Column(sa.JSON, nullable=True)
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "tan_code": self.tan_code,
+            "exercise_id": self.exercise_id,
+            "status": self.status,
+            "started": self.started,
+            "terminated": self.terminated,
+            "passed": self.passed,
+            "feedback": self.feedback
+        }

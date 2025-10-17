@@ -1,17 +1,23 @@
 import asyncio
-from unittest.mock import MagicMock, ANY
+from unittest.mock import MagicMock, ANY, AsyncMock
 
-from amqp import Connection
+from aio_pika.abc import AbstractRobustChannel
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-from app.config import GRADING_RESPONSE_QUEUE_TTL
 from app.db.database import get_session
 from app.main import app
 from app.mq.message_queue import get_mq_channel
 from tests.util.db_util import create_test_tables, get_override_dependency, insert_all_records, DB_URI
 
+
+def setup_mocks():
+    channel_mock = MagicMock()
+    exchange_mock = MagicMock()
+    exchange_mock.publish = AsyncMock()
+    channel_mock.get_exchange = AsyncMock(return_value=exchange_mock)
+    return channel_mock, exchange_mock
 
 class TestSubmission:
     def setup_method(self):
@@ -22,10 +28,10 @@ class TestSubmission:
         asyncio.run(insert_all_records(self.async_session))
 
     def test_post_submission(self):
-        mock_channel = MagicMock()
+        channel_mock, exchange_mock = setup_mocks()
 
-        async def get_mq_connection_override() -> Connection:
-            yield mock_channel  # noqa
+        async def get_mq_connection_override() -> AbstractRobustChannel:
+            yield channel_mock  # noqa
 
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         app.dependency_overrides[get_mq_channel] = get_mq_connection_override
@@ -43,16 +49,13 @@ class TestSubmission:
         print(response.json())
 
         assert response.status_code == status.HTTP_201_CREATED
-        mock_channel.basic_publish.assert_called_once_with(ANY, routing_key='grading_jobs')
-        mock_channel.queue_declare.assert_called_once_with(queue=ANY, durable=True, arguments={
-            "x-expires": GRADING_RESPONSE_QUEUE_TTL,
-        })
+        exchange_mock.publish.assert_awaited_once_with(ANY, routing_key='grading_jobs')
 
     def test_post_invalid_submission(self):
-        mock_channel = MagicMock()
+        channel_mock, exchange_mock = setup_mocks()
 
-        async def get_mq_connection_override() -> Connection:
-            yield mock_channel  # noqa
+        async def get_mq_connection_override() -> AbstractRobustChannel:
+            yield channel_mock  # noqa
 
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         app.dependency_overrides[get_mq_channel] = get_mq_connection_override
@@ -70,5 +73,5 @@ class TestSubmission:
         print(response.json())
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        mock_channel.basic_publish.assert_not_called()
-        mock_channel.queue_declare.assert_not_called()
+        channel_mock.get_exchange.assert_not_awaited()
+        exchange_mock.publish.assert_not_awaited()
