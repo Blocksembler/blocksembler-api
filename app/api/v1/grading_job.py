@@ -10,16 +10,16 @@ from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schema.grading import ExerciseSubmission, GradingJobRead
+from app.api.schema.grading_job import ExerciseSubmission, GradingJobRead
 from app.config import MESSAGE_QUEUE_EXCHANGE_NAME
 from app.db.database import get_session
 from app.db.model.exercise import ExerciseProgress
-from app.db.model.grading import GradingJob
+from app.db.model.grading_job import GradingJob
 from app.mq.message_queue import get_mq_channel
 
 router = APIRouter(
-    prefix="/submissions",
-    tags=["submissions"],
+    prefix="/grading-jobs",
+    tags=["grading jobs"],
 )
 
 

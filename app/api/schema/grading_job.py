@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -10,13 +9,6 @@ class ExerciseSubmission(BaseModel):
     solution_code: str
 
 
-class GradingResult(BaseModel):
-    success: bool
-    penalty: datetime
-    feedback: str
-    hint: Optional[str]
-
-
 class GradingJobRead(BaseModel):
     id: str
     tan_code: str
@@ -25,4 +17,4 @@ class GradingJobRead(BaseModel):
     started: datetime
     terminated: datetime | None
     passed: bool | None
-    feedback: GradingResult | None
+    feedback: list[str] | None

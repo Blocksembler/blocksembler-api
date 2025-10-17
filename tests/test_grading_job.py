@@ -19,7 +19,8 @@ def setup_mocks():
     channel_mock.get_exchange = AsyncMock(return_value=exchange_mock)
     return channel_mock, exchange_mock
 
-class TestSubmission:
+
+class TestGradingJob:
     def setup_method(self):
         self.engine = create_async_engine(DB_URI, echo=True, future=True)
         self.async_session = async_sessionmaker(self.engine, expire_on_commit=False, class_=AsyncSession)
@@ -38,13 +39,13 @@ class TestSubmission:
 
         client = TestClient(app)
 
-        submission = {
+        exercise_submission = {
             "tan_code": "test-tan-1",
             "exercise_id": 2,
             "solution_code": "addi r0 r0 r0"
         }
 
-        response = client.post("/submissions", json=submission)
+        response = client.post("/grading-jobs", json=exercise_submission)
 
         print(response.json())
 
@@ -62,13 +63,13 @@ class TestSubmission:
 
         client = TestClient(app)
 
-        submission = {
+        exercise_submission = {
             "tan_code": "non-existing-tan",
             "exercise_id": 1,
             "solution_code": "addi r0 r0 r0"
         }
 
-        response = client.post("/submissions", json=submission)
+        response = client.post("/grading-jobs", json=exercise_submission)
 
         print(response.json())
 

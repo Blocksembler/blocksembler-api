@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
+import aio_pika
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -49,4 +50,4 @@ app.include_router(tan.router)
 app.include_router(health.router)
 app.include_router(logging_event.router)
 app.include_router(exercise.router)
-app.include_router(grading.router)
+app.include_router(grading_job.router)
