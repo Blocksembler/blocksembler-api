@@ -15,3 +15,14 @@ class GradingResult(BaseModel):
     penalty: datetime
     feedback: str
     hint: Optional[str]
+
+
+class GradingJobRead(BaseModel):
+    id: str
+    tan_code: str
+    exercise_id: int
+    status: str
+    started: datetime
+    terminated: datetime | None
+    passed: bool | None
+    feedback: GradingResult | None
