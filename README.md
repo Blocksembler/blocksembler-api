@@ -77,7 +77,6 @@ started, follow these steps:
 | `BLOCKSEMBLER_MQ_EXCHANGE_NAME`           | `blocksembler-grading-exchange` | Name of the RabbitMQ exchange used for publishing grading jobs. |
 | `BLOCKSEMBLER_MQ_GRADING_JOB_QUEUE`       | `grading-jobs`                  | Name of the RabbitMQ queue that receives grading jobs.          |
 | `BLOCKSEMBLER_MQ_GRADING_JOB_ROUTING_KEY` | `grading.job.created`           | Routing key used to bind the grading job queue to the exchange. |
-|
 
 ## Contributing
 
