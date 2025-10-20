@@ -10,16 +10,16 @@ from fastapi import status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schema.grading import ExerciseSubmission, GradingJobRead
-from app.config import MESSAGE_QUEUE_EXCHANGE_NAME
+from app.api.schema.grading_job import ExerciseSubmission, GradingJobRead
+from app.config import MQ_EXCHANGE_NAME, GRADING_JOB_ROUTING_KEY
 from app.db.database import get_session
 from app.db.model.exercise import ExerciseProgress
-from app.db.model.grading import GradingJob
+from app.db.model.grading_job import GradingJob
 from app.mq.message_queue import get_mq_channel
 
 router = APIRouter(
-    prefix="/submissions",
-    tags=["submissions"],
+    prefix="/grading-jobs",
+    tags=["grading jobs"],
 )
 
 
@@ -34,8 +34,8 @@ async def submit_grading_job(job_msg: dict, session: AsyncSession, ch: AbstractR
 
     job_msg["job_id"] = str(job_msg["job_id"])
 
-    exchange = await ch.get_exchange(MESSAGE_QUEUE_EXCHANGE_NAME)
-    await exchange.publish(Message(body=json.dumps(job_msg).encode('utf-8')), routing_key='grading_jobs')
+    exchange = await ch.get_exchange(MQ_EXCHANGE_NAME)
+    await exchange.publish(Message(body=json.dumps(job_msg).encode('utf-8')), routing_key=GRADING_JOB_ROUTING_KEY)
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=str)
