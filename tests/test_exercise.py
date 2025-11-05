@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 
 from app.db.database import get_session
 from app.main import app
-from tests.util.db_util import create_test_tables, get_override_dependency, insert_all_records, DB_URI
+from tests.util.db_util import create_test_tables, get_override_dependency, insert_demo_data, DB_URI
 from tests.util.demo_data import EXERCISES
 
 
@@ -17,7 +17,7 @@ class TestExercise:
         self.async_session = async_sessionmaker(self.engine, expire_on_commit=False, class_=AsyncSession)
 
         asyncio.run(create_test_tables(self.engine))
-        asyncio.run(insert_all_records(self.async_session))
+        asyncio.run(insert_demo_data(self.async_session))
 
     def test_get_exercise(self):
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
