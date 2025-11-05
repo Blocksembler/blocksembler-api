@@ -1,3 +1,5 @@
+import json
+
 import sqlalchemy as sa
 from sqlalchemy import ForeignKey
 
@@ -22,6 +24,6 @@ class LoggingEvent(Base):
             "timestamp": self.timestamp,
             "source": self.source,
             "type": self.type,
-            "payload": str(self.payload),
+            "payload": self.payload,
             "exercise_id": self.exercise_id,
         }

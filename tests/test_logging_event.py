@@ -3,34 +3,33 @@ import asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
+from app.api.schema.logging_event import LoggingEventRead
 from app.db.database import get_session
 from app.main import app
-from tests.util.db_util import create_test_tables, get_override_dependency, insert_demo_data
+from tests.util.db_util import insert_demo_data, DB_URI, create_test_tables, get_override_dependency
+from tests.util.demo_data import LOGGING_EVENTS
 
-DB_URI = "sqlite+aiosqlite:///:memory:"
 
+class TestLoggingEvent:
 
-class TestTan:
-    def setup_method(self):
+    def setup_class(self):
         self.engine = create_async_engine(DB_URI, echo=True, future=True)
         self.async_session = async_sessionmaker(self.engine, expire_on_commit=False, class_=AsyncSession)
 
         asyncio.run(create_test_tables(self.engine))
         asyncio.run(insert_demo_data(self.async_session))
 
-    def test_get_tan(self):
+    def test_get_logging_events(self):
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/tans/test-tan-1")
+        response = client.get("/logging-events/logging-test-tan")
 
-        assert response.json() == {"code": "test-tan-1", "valid_from": '2025-10-07T18:00:00', "valid_to": None}
         assert response.status_code == 200
+        assert len(response.json()) == 2
 
-    def test_get_none_existing_tan(self):
-        app.dependency_overrides[get_session] = get_override_dependency(self.engine)
-        client = TestClient(app)
+        assert response.json()[0] == LoggingEventRead(**LOGGING_EVENTS[0]).model_dump(mode='json')
+        assert response.json()[1] == LoggingEventRead(**LOGGING_EVENTS[1]).model_dump(mode='json')
 
-        response = client.get("/tans/not-existing-tan")
 
-        assert response.status_code == 404
+

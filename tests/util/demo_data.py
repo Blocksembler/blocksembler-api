@@ -23,6 +23,32 @@ TANS = [
         "code": "test-tan-3",
         "competition_id": 1,
         "valid_from": datetime(2025, 10, 7, 18, 0, 0),
+    },
+    {
+        "code": "logging-test-tan",
+        "competition_id": 1,
+        "valid_from": datetime(2025, 10, 7, 18, 0, 0),
+    }
+]
+
+LOGGING_EVENTS = [
+    {
+        "id": 1,
+        "tan_code": "logging-test-tan",
+        "timestamp": datetime(2025, 10, 7, 18, 0, 1),
+        "source": "button",
+        "type": "click",
+        "payload": {"msg": "first logging message", "data": [1, 2, 3, 4, 5]},
+        "exercise_id": 1
+    },
+    {
+        "id": 2,
+        "tan_code": "logging-test-tan",
+        "timestamp": datetime(2025, 10, 7, 18, 0, 2),
+        "source": "button",
+        "type": "click",
+        "payload": {"msg": "second logging message", "data": [5, 4, 3, 2, 1]},
+        "exercise_id": 1
     }
 ]
 

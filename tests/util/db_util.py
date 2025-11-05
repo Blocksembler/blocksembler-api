@@ -1,9 +1,12 @@
+import json
+
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, async_sessionmaker
 
 from app.db.database import Base
-from app.db.model import Exercise, Tan
+from app.db.model import Exercise, Tan, LoggingEvent
 from app.db.model.exercise import ExerciseProgress, Competition, TestCase
-from tests.util.demo_data import COMPETITIONS, TANS, EXERCISES, EXERCISE_PROGRESS_ENTRIES, EXERCISE_TEST_CASES
+from tests.util.demo_data import COMPETITIONS, TANS, EXERCISES, EXERCISE_PROGRESS_ENTRIES, EXERCISE_TEST_CASES, \
+    LOGGING_EVENTS
 
 DB_URI = "sqlite+aiosqlite:///:memory:"
 
@@ -21,13 +24,16 @@ async def create_test_tables(engine: AsyncEngine):
         await conn.run_sync(Base.metadata.create_all)
 
 
-async def insert_all_records(session_factory: async_sessionmaker):
+async def insert_demo_data(session_factory: async_sessionmaker):
     async with session_factory() as session:
         for competition in COMPETITIONS:
             await insert_competition(session, competition)
 
         for tan in TANS:
             await insert_tan(session, tan)
+
+        for logging_event in LOGGING_EVENTS:
+            await insert_logging_event(session, logging_event)
 
         for exercise in EXERCISES:
             await insert_exercise(session, exercise)
@@ -55,6 +61,13 @@ async def insert_exercise_progress(session: AsyncSession, exercise_progress: dic
 async def insert_tan(session: AsyncSession, tan: dict) -> None:
     tan = Tan(**tan)
     session.add(tan)
+    await session.commit()
+
+
+async def insert_logging_event(session: AsyncSession, logging_event: dict) -> None:
+    logging_event["payload"] = json.dumps(logging_event["payload"])
+    logging_event = LoggingEvent(**logging_event)
+    session.add(logging_event)
     await session.commit()
 
 
