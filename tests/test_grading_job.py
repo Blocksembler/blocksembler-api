@@ -1,4 +1,5 @@
 import asyncio
+from datetime import timezone, datetime
 from unittest.mock import MagicMock, ANY, AsyncMock
 
 from aio_pika.abc import AbstractRobustChannel
@@ -10,6 +11,7 @@ from app.config import GRADING_JOB_ROUTING_KEY
 from app.db.database import get_session
 from app.main import app
 from app.mq.message_queue import get_mq_channel
+from app.util import get_datetime_now
 from tests.util.db_util import create_test_tables, get_override_dependency, insert_demo_data, DB_URI
 
 
@@ -35,6 +37,13 @@ class TestGradingJob:
         async def get_mq_connection_override() -> AbstractRobustChannel:
             yield channel_mock  # noqa
 
+        def get_datetime_now_override():
+            def now():
+                yield datetime(2026, 10, 7, 19, 31, 0, tzinfo=timezone.utc)
+
+            return now
+
+        app.dependency_overrides[get_datetime_now] = get_datetime_now_override()
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         app.dependency_overrides[get_mq_channel] = get_mq_connection_override
 

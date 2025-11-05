@@ -1,4 +1,4 @@
-import datetime
+from datetime import timedelta, datetime, timezone
 
 import sqlalchemy as sa
 from fastapi import APIRouter, HTTPException, status, Response
@@ -10,6 +10,7 @@ from app.api.schema.exercise import ExerciseRead, ExerciseCreate, TestCaseRead, 
 from app.db.database import get_session
 from app.db.model import Tan
 from app.db.model.exercise import Exercise, ExerciseProgress, Competition, TestCase
+from app.util import get_datetime_now
 
 router = APIRouter(
     prefix="/exercises",
@@ -20,7 +21,8 @@ router = APIRouter(
 @router.get("/current",
             response_model=ExerciseRead,
             status_code=status.HTTP_200_OK)
-async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(get_session)) -> ExerciseRead | Response:
+async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(get_session),
+                               now: datetime = Depends(get_datetime_now)) -> ExerciseRead | Response:
     statement = select(Tan).where(Tan.code == tan_code)
     result = await session.execute(statement)
     tan = result.scalars().first()
@@ -56,7 +58,7 @@ async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(ge
             ep = ExerciseProgress(
                 tan_code=tan_code,
                 exercise_id=last_exercise.next_exercise_id,
-                start_time=datetime.datetime.now(),
+                start_time=now,
                 skipped=False
             )
             session.add(ep)
@@ -78,7 +80,7 @@ async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(ge
             ep = ExerciseProgress(
                 tan_code=tan_code,
                 exercise_id=first_exercise_id,
-                start_time=datetime.datetime.now(),
+                start_time=now,
                 skipped=False
             )
 
@@ -91,6 +93,49 @@ async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(ge
             return ExerciseRead(**exercise.to_dict())
 
     return ExerciseRead(**exercise.to_dict())
+
+
+@router.post("/current/skip", status_code=status.HTTP_204_NO_CONTENT)
+async def post_skip_current_exercise(tan_code: str, session: AsyncSession = Depends(get_session),
+                                     now: datetime = Depends(get_datetime_now)) -> None:
+    statement = select(Tan).where(Tan.code == tan_code)
+    result = await session.execute(statement)
+    tan = result.scalars().first()
+
+    if not tan:
+        raise HTTPException(status_code=404, detail="TAN code not found")
+
+    statement = select(ExerciseProgress).where(
+        sa.and_(ExerciseProgress.tan_code == tan_code,
+                ExerciseProgress.end_time.is_(None)))
+    result = await session.execute(statement)
+    exercise_progress: ExerciseProgress = result.scalars().first()
+
+    if exercise_progress:
+        statement = select(Exercise).where(Exercise.id == exercise_progress.exercise_id)
+        result = await session.execute(statement)
+        current_exercise: Exercise = result.scalars().first()
+
+        allow_skip_after_date = (exercise_progress.start_time
+                                 + timedelta(minutes=current_exercise.allow_skip_after))
+
+        if allow_skip_after_date.tzinfo is None:
+            allow_skip_after_date = allow_skip_after_date.replace(tzinfo=timezone.utc)
+
+        if now < allow_skip_after_date:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail=f"Skipping is not allowed before {allow_skip_after_date.isoformat()}.")
+
+        exercise_progress.end_time = now
+        exercise_progress.skipped = True
+
+        session.add(exercise_progress)
+        await session.commit()
+        await session.refresh(exercise_progress)
+
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="User is not currently working on an exercise.")
 
 
 @router.get("/{exercise_id}",

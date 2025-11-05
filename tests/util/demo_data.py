@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 COMPETITIONS = [
     {
@@ -12,22 +12,22 @@ TANS = [
     {
         "code": "test-tan-1",
         "competition_id": 1,
-        "valid_from": datetime(2025, 10, 7, 18, 0, 0),
+        "valid_from": datetime(2025, 10, 7, 18, 0, 0, tzinfo=timezone.utc),
     },
     {
         "code": "test-tan-2",
         "competition_id": 1,
-        "valid_from": datetime(2025, 10, 7, 18, 0, 0),
+        "valid_from": datetime(2025, 10, 7, 18, 0, 0, tzinfo=timezone.utc),
     },
     {
         "code": "test-tan-3",
         "competition_id": 1,
-        "valid_from": datetime(2025, 10, 7, 18, 0, 0),
+        "valid_from": datetime(2025, 10, 7, 18, 0, 0, tzinfo=timezone.utc),
     },
     {
         "code": "logging-test-tan",
         "competition_id": 1,
-        "valid_from": datetime(2025, 10, 7, 18, 0, 0),
+        "valid_from": datetime(2025, 10, 7, 18, 0, 0, tzinfo=timezone.utc),
     }
 ]
 
@@ -35,7 +35,7 @@ LOGGING_EVENTS = [
     {
         "id": 1,
         "tan_code": "logging-test-tan",
-        "timestamp": datetime(2025, 10, 7, 18, 0, 1),
+        "timestamp": datetime(2025, 10, 7, 18, 0, 1, tzinfo=timezone.utc),
         "source": "button",
         "type": "click",
         "payload": {"msg": "first logging message", "data": [1, 2, 3, 4, 5]},
@@ -44,7 +44,7 @@ LOGGING_EVENTS = [
     {
         "id": 2,
         "tan_code": "logging-test-tan",
-        "timestamp": datetime(2025, 10, 7, 18, 0, 2),
+        "timestamp": datetime(2025, 10, 7, 18, 0, 2, tzinfo=timezone.utc),
         "source": "button",
         "type": "click",
         "payload": {"msg": "second logging message", "data": [5, 4, 3, 2, 1]},
@@ -58,7 +58,7 @@ EXERCISES = [
         "title": "Demo Exercise 1",
         "markdown": "",
         "coding_mode": "bbp",
-        "allow_skip_after": 0,
+        "allow_skip_after": 5,
         "next_exercise_id": 2,
     },
     {
@@ -66,7 +66,7 @@ EXERCISES = [
         "title": "Demo exercise 2",
         "markdown": "",
         "coding_mode": "bbp",
-        "allow_skip_after": 0,
+        "allow_skip_after": 5,
         "next_exercise_id": 3,
     },
     {
@@ -74,7 +74,7 @@ EXERCISES = [
         "title": "Demo exercise 3",
         "markdown": "",
         "coding_mode": "bbp",
-        "allow_skip_after": 0,
+        "allow_skip_after": 5,
         "next_exercise_id": None,
     }
 ]
@@ -84,15 +84,15 @@ EXERCISE_PROGRESS_ENTRIES = [
         "id": 1,
         "tan_code": "test-tan-1",
         "exercise_id": 1,
-        "start_time": datetime(2025, 10, 7, 18, 30, 0),
-        "end_time": datetime(2025, 10, 7, 19, 30, 0),
+        "start_time": datetime(2025, 10, 7, 18, 30, 0, tzinfo=timezone.utc),
+        "end_time": datetime(2025, 10, 7, 19, 30, 0, tzinfo=timezone.utc),
         "skipped": False
     },
     {
         "id": 2,
         "tan_code": "test-tan-1",
         "exercise_id": 2,
-        "start_time": datetime(2025, 10, 7, 19, 30, 0),
+        "start_time": datetime(2025, 10, 7, 19, 30, 0, tzinfo=timezone.utc),
         "end_time": None,
         "skipped": False
     },
@@ -100,16 +100,16 @@ EXERCISE_PROGRESS_ENTRIES = [
         "id": 3,
         "tan_code": "test-tan-2",
         "exercise_id": 1,
-        "start_time": datetime(2025, 10, 7, 18, 0, 0),
-        "end_time": datetime(2025, 10, 7, 19, 0, 0),
+        "start_time": datetime(2025, 10, 7, 18, 0, 0, tzinfo=timezone.utc),
+        "end_time": datetime(2025, 10, 7, 19, 0, 0, tzinfo=timezone.utc),
         "skipped": False
     },
     {
         "id": 4,
         "tan_code": "test-tan-2",
         "exercise_id": 2,
-        "start_time": datetime(2025, 10, 7, 19, 0, 0),
-        "end_time": datetime(2025, 10, 7, 20, 0, 0),
+        "start_time": datetime(2025, 10, 7, 19, 0, 0, tzinfo=timezone.utc),
+        "end_time": datetime(2025, 10, 7, 20, 0, 0, tzinfo=timezone.utc),
         "skipped": False
     },
 ]

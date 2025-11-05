@@ -1,6 +1,6 @@
-import datetime
 import json
 import logging
+from datetime import datetime
 from uuid import uuid4
 
 from aio_pika import Message
@@ -16,6 +16,7 @@ from app.db.database import get_session
 from app.db.model.exercise import ExerciseProgress
 from app.db.model.grading_job import GradingJob
 from app.mq.message_queue import get_mq_channel
+from app.util import get_datetime_now
 
 router = APIRouter(
     prefix="/grading-jobs",
@@ -23,13 +24,14 @@ router = APIRouter(
 )
 
 
-async def submit_grading_job(job_msg: dict, session: AsyncSession, ch: AbstractRobustChannel):
+async def submit_grading_job(job_msg: dict, session: AsyncSession, ch: AbstractRobustChannel,
+                             now: datetime):
     session.add(GradingJob(
         id=job_msg["job_id"],
         tan_code=job_msg["tan_code"],
         exercise_id=job_msg["exercise_id"],
         status="pending",
-        started=datetime.datetime.now()
+        started=now
     ))
 
     job_msg["job_id"] = str(job_msg["job_id"])
@@ -40,7 +42,8 @@ async def submit_grading_job(job_msg: dict, session: AsyncSession, ch: AbstractR
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=str)
 async def create_submission(new_submission: ExerciseSubmission, session: AsyncSession = Depends(get_session),
-                            mq_channel: AbstractRobustChannel = Depends(get_mq_channel)) -> str:
+                            mq_channel: AbstractRobustChannel = Depends(get_mq_channel),
+                            now: datetime = Depends(get_datetime_now)) -> str:
     stmt = select(ExerciseProgress).where(ExerciseProgress.exercise_id == new_submission.exercise_id,
                                           ExerciseProgress.tan_code == new_submission.tan_code,
                                           ExerciseProgress.end_time.is_(None))
@@ -58,7 +61,7 @@ async def create_submission(new_submission: ExerciseSubmission, session: AsyncSe
             "solution_code": new_submission.solution_code
         }
 
-        await submit_grading_job(job_msg, session, mq_channel)
+        await submit_grading_job(job_msg, session, mq_channel, now)
         await session.commit()
 
         return str(job_msg["job_id"])

@@ -28,8 +28,11 @@ class TestLoggingEvent:
         assert response.status_code == 200
         assert len(response.json()) == 2
 
-        assert response.json()[0] == LoggingEventRead(**LOGGING_EVENTS[0]).model_dump(mode='json')
-        assert response.json()[1] == LoggingEventRead(**LOGGING_EVENTS[1]).model_dump(mode='json')
+        logging_event_1 = LoggingEventRead(**LOGGING_EVENTS[0]).model_dump(mode='json')
+        logging_event_1['timestamp'] = logging_event_1['timestamp'][:-1]
 
+        logging_event_2 = LoggingEventRead(**LOGGING_EVENTS[1]).model_dump(mode='json')
+        logging_event_2['timestamp'] = logging_event_2['timestamp'][:-1]
 
-
+        assert response.json()[0] == logging_event_1
+        assert response.json()[1] == logging_event_2
