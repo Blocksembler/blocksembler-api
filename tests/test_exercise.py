@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timezone
 
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -6,6 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 
 from app.db.database import get_session
 from app.main import app
+from app.util import get_datetime_now
 from tests.util.db_util import create_test_tables, get_override_dependency, insert_demo_data, DB_URI
 from tests.util.demo_data import EXERCISES
 
@@ -157,3 +159,46 @@ class TestExercise:
         assert result_test_cases[0]["user_input"] == expected_test_case["user_input"]
         assert result_test_cases[0]["expected_output"] == expected_test_case["expected_output"]
         assert "id" in result_test_cases[0]
+
+    def test_post_skip_exercise_with_invalid_tan(self):
+        app.dependency_overrides[get_session] = get_override_dependency(self.engine)
+        client = TestClient(app)
+
+        response = client.post("/exercises/current/skip", params={"tan_code": "non-existing-tan"})
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_post_skip_exercise_before_deadline(self):
+        def get_datetime_now_override():
+            def now():
+                yield datetime(2025, 10, 7, 19, 31, 0, tzinfo=timezone.utc)
+
+            return now
+
+        app.dependency_overrides[get_datetime_now] = get_datetime_now_override()
+        app.dependency_overrides[get_session] = get_override_dependency(self.engine)
+
+        client = TestClient(app)
+
+        response = client.post("/exercises/current/skip", params={"tan_code": "test-tan-1"})
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json() == {
+            "detail": "Skipping is not allowed before 2025-10-07T19:35:00+00:00."
+        }
+
+    def test_post_skip_exercise_after_deadline(self):
+        def get_datetime_now_override():
+            def now():
+                yield datetime(2026, 10, 7, 19, 31, 0, tzinfo=timezone.utc)
+
+            return now
+
+        app.dependency_overrides[get_datetime_now] = get_datetime_now_override()
+        app.dependency_overrides[get_session] = get_override_dependency(self.engine)
+
+        client = TestClient(app)
+
+        response = client.post("/exercises/current/skip", params={"tan_code": "test-tan-1"})
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
