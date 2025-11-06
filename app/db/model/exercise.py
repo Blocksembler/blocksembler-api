@@ -11,7 +11,7 @@ class Exercise(Base):
     markdown = sa.Column(sa.TEXT, nullable=False)
     coding_mode = sa.Column(sa.VARCHAR(3), nullable=False)
     next_exercise_id = sa.Column(sa.Integer, sa.ForeignKey("exercise.id"), nullable=True)
-    allow_skip_after = sa.Column(sa.Integer, nullable=True)
+    skip_delay = sa.Column(sa.Integer, nullable=False)
 
     def to_dict(self):
         return {
@@ -20,7 +20,7 @@ class Exercise(Base):
             "markdown": self.markdown,
             "coding_mode": self.coding_mode,
             "next_exercise_id": self.next_exercise_id,
-            "allow_skip_after": self.allow_skip_after,
+            "skip_delay": self.skip_delay,
         }
 
 

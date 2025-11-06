@@ -12,6 +12,13 @@ from tests.util.db_util import create_test_tables, get_override_dependency, inse
 from tests.util.demo_data import EXERCISES
 
 
+def get_datetime_now_override(datetime_now):
+    def now():
+        yield datetime_now
+
+    return now
+
+
 class TestExercise:
 
     def setup_class(self):
@@ -38,7 +45,7 @@ class TestExercise:
             "title": "posted exercise",
             "markdown": "",
             "coding_mode": "bbp",
-            "allow_skip_after": None,
+            "skip_delay": 10,
             "next_exercise_id": None,
         }
 
@@ -59,8 +66,11 @@ class TestExercise:
 
         response = client.get("/exercises/current", params={"tan_code": "test-tan-1"})
 
+        exercise_1 = dict(EXERCISES[1])
+        exercise_1["skip_unlock_time"] = datetime(year=2025, month=10, day=7, hour=19, minute=35, second=0).isoformat()
+
         assert response.status_code == 200
-        assert response.json() == EXERCISES[1]
+        assert response.json() == exercise_1
 
     def test_get_current_exercise_with_none_existing_tan(self):
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
@@ -71,22 +81,32 @@ class TestExercise:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_get_current_exercise_with_missing_current_progress_entry_1(self):
+        app.dependency_overrides[get_datetime_now] = get_datetime_now_override(
+            datetime(year=2025, month=10, day=7, hour=19, minute=35, second=0, tzinfo=timezone.utc))
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
         response = client.get("/exercises/current", params={"tan_code": "test-tan-2"})
 
+        exercise_2 = dict(EXERCISES[2])
+        exercise_2["skip_unlock_time"] = "2025-10-07T19:40:00Z"
+
         assert response.status_code == 200
-        assert response.json() == EXERCISES[2]
+        assert response.json() == exercise_2
 
     def test_get_current_exercise_with_missing_current_progress_entry_2(self):
+        app.dependency_overrides[get_datetime_now] = get_datetime_now_override(
+            datetime(year=2025, month=10, day=7, hour=19, minute=35, second=0, tzinfo=timezone.utc))
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
         response = client.get("/exercises/current", params={"tan_code": "test-tan-3"})
 
+        exercise_0 = dict(EXERCISES[0])
+        exercise_0["skip_unlock_time"] = "2025-10-07T19:40:00Z"
+
         assert response.status_code == 200
-        assert response.json() == EXERCISES[0]
+        assert response.json() == exercise_0
 
     def test_post_test_case(self):
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
@@ -169,13 +189,8 @@ class TestExercise:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_post_skip_exercise_before_deadline(self):
-        def get_datetime_now_override():
-            def now():
-                yield datetime(2025, 10, 7, 19, 31, 0, tzinfo=timezone.utc)
-
-            return now
-
-        app.dependency_overrides[get_datetime_now] = get_datetime_now_override()
+        app.dependency_overrides[get_datetime_now] = get_datetime_now_override(
+            datetime(2025, 10, 7, 19, 31, 0, tzinfo=timezone.utc))
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
 
         client = TestClient(app)
@@ -188,13 +203,8 @@ class TestExercise:
         }
 
     def test_post_skip_exercise_after_deadline(self):
-        def get_datetime_now_override():
-            def now():
-                yield datetime(2026, 10, 7, 19, 31, 0, tzinfo=timezone.utc)
-
-            return now
-
-        app.dependency_overrides[get_datetime_now] = get_datetime_now_override()
+        app.dependency_overrides[get_datetime_now] = get_datetime_now_override(
+            datetime(2026, 10, 7, 19, 31, 0, tzinfo=timezone.utc))
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
 
         client = TestClient(app)
