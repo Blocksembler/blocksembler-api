@@ -58,7 +58,7 @@ EXERCISES = [
         "title": "Demo Exercise 1",
         "markdown": "",
         "coding_mode": "bbp",
-        "allow_skip_after": 5,
+        "skip_delay": 5,
         "next_exercise_id": 2,
     },
     {
@@ -66,7 +66,7 @@ EXERCISES = [
         "title": "Demo exercise 2",
         "markdown": "",
         "coding_mode": "bbp",
-        "allow_skip_after": 5,
+        "skip_delay": 5,
         "next_exercise_id": 3,
     },
     {
@@ -74,7 +74,7 @@ EXERCISES = [
         "title": "Demo exercise 3",
         "markdown": "",
         "coding_mode": "bbp",
-        "allow_skip_after": 5,
+        "skip_delay": 5,
         "next_exercise_id": None,
     }
 ]
