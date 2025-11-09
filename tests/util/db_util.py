@@ -3,10 +3,10 @@ import json
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, async_sessionmaker
 
 from app.db.database import Base
-from app.db.model import Exercise, Tan, LoggingEvent
+from app.db.model import Exercise, Tan, LoggingEvent, GradingJob
 from app.db.model.exercise import ExerciseProgress, Competition, TestCase
 from tests.util.demo_data import COMPETITIONS, TANS, EXERCISES, EXERCISE_PROGRESS_ENTRIES, EXERCISE_TEST_CASES, \
-    LOGGING_EVENTS
+    LOGGING_EVENTS, GRADING_JOBS
 
 DB_URI = "sqlite+aiosqlite:///:memory:"
 
@@ -45,6 +45,9 @@ async def insert_demo_data(session_factory: async_sessionmaker):
             for test_case in EXERCISE_TEST_CASES[exercise_id]:
                 await insert_exercise_test_case(session, exercise_id, test_case)
 
+        for grading_job in GRADING_JOBS:
+            await insert_grading_job(session, grading_job)
+
 
 async def insert_exercise(session: AsyncSession, exercise: dict) -> None:
     exercise = Exercise(**exercise)
@@ -80,4 +83,10 @@ async def insert_competition(session: AsyncSession, competition: dict) -> None:
 async def insert_exercise_test_case(session: AsyncSession, exercise_id: int, test_case: dict) -> None:
     test_case = TestCase(exercise_id=exercise_id, **test_case)
     session.add(test_case)
+    await session.commit()
+
+
+async def insert_grading_job(session: AsyncSession, grading_job: dict) -> None:
+    grading_job = GradingJob(**grading_job)
+    session.add(grading_job)
     await session.commit()

@@ -1,5 +1,5 @@
 import asyncio
-from datetime import timezone, datetime
+from datetime import datetime
 from unittest.mock import MagicMock, ANY, AsyncMock
 
 from aio_pika.abc import AbstractRobustChannel
@@ -39,7 +39,7 @@ class TestGradingJob:
 
         def get_datetime_now_override():
             def now():
-                yield datetime(2026, 10, 7, 19, 31, 0, tzinfo=timezone.utc)
+                yield datetime(2026, 10, 7, 19, 37, 0)
 
             return now
 
@@ -86,3 +86,65 @@ class TestGradingJob:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         channel_mock.get_exchange.assert_not_awaited()
         exchange_mock.publish.assert_not_awaited()
+
+    def test_early_grading_job_submission(self):
+        channel_mock, exchange_mock = setup_mocks()
+
+        async def get_mq_connection_override() -> AbstractRobustChannel:
+            yield channel_mock  # noqa
+
+        def get_datetime_now_override():
+            def now():
+                yield datetime(2025, 10, 7, 19, 31, 0)
+
+            return now
+
+        app.dependency_overrides[get_datetime_now] = get_datetime_now_override()
+        app.dependency_overrides[get_session] = get_override_dependency(self.engine)
+        app.dependency_overrides[get_mq_channel] = get_mq_connection_override
+
+        client = TestClient(app)
+
+        exercise_submission = {
+            "tan_code": "test-tan-1",
+            "exercise_id": 2,
+            "solution_code": "addi r0 r0 r0"
+        }
+
+        response = client.post("/grading-jobs", json=exercise_submission)
+
+        print(response.json())
+
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+        assert response.json()["detail"] == "Next grading allowed at 2025-10-07 19:35:00"
+
+    def test_post_job_with_pending_job(self):
+        channel_mock, exchange_mock = setup_mocks()
+
+        async def get_mq_connection_override() -> AbstractRobustChannel:
+            yield channel_mock  # noqa
+
+        def get_datetime_now_override():
+            def now():
+                yield datetime(2025, 10, 7, 19, 50, 0)
+
+            return now
+
+        app.dependency_overrides[get_datetime_now] = get_datetime_now_override()
+        app.dependency_overrides[get_session] = get_override_dependency(self.engine)
+        app.dependency_overrides[get_mq_channel] = get_mq_connection_override
+
+        client = TestClient(app)
+
+        exercise_submission = {
+            "tan_code": "test-tan-4",
+            "exercise_id": 1,
+            "solution_code": "addi r0 r0 r0"
+        }
+
+        response = client.post("/grading-jobs", json=exercise_submission)
+
+        print(response.json())
+
+        assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+        assert response.json()["detail"] == "Previous grading job still in progress!"
