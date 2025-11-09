@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schema.exercise import ExerciseRead, ExerciseCreate, TestCaseRead, TestCaseCreate, \
-    ExerciseWithSkipUnlockTime
+    ExerciseWithUnlockTimestamps
 from app.db.database import get_session
 from app.db.model import Tan
 from app.db.model.exercise import Exercise, ExerciseProgress, Competition, TestCase
@@ -21,10 +21,10 @@ router = APIRouter(
 
 
 @router.get("/current",
-            response_model=ExerciseWithSkipUnlockTime,
+            response_model=ExerciseWithUnlockTimestamps,
             status_code=status.HTTP_200_OK)
 async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(get_session),
-                               now: datetime = Depends(get_datetime_now)) -> ExerciseWithSkipUnlockTime | Response:
+                               now: datetime = Depends(get_datetime_now)) -> ExerciseWithUnlockTimestamps | Response:
     statement = select(Tan).where(Tan.code == tan_code)
     result = await session.execute(statement)
     tan = result.scalars().first()
@@ -69,8 +69,9 @@ async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(ge
             result = await session.execute(stmt)
             exercise = result.scalars().first()
 
-            return ExerciseWithSkipUnlockTime(**exercise.to_dict(),
-                                              skip_unlock_time=(now + timedelta(minutes=exercise.skip_delay)))
+            return ExerciseWithUnlockTimestamps(**exercise.to_dict(),
+                                                skip_unlock_time=(now + timedelta(minutes=exercise.skip_delay)),
+                                                next_grading_allowed_at=now)
         else:
             stmt = (select(Exercise)
                     .join(Competition, Competition.first_exercise_id == Exercise.id)
@@ -92,15 +93,18 @@ async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(ge
 
             await session.refresh(first_exercise)
 
-            return ExerciseWithSkipUnlockTime(**first_exercise.to_dict(),
-                                              skip_unlock_time=(now + timedelta(minutes=first_exercise.skip_delay)))
+            return ExerciseWithUnlockTimestamps(**first_exercise.to_dict(),
+                                                skip_unlock_time=(now + timedelta(minutes=first_exercise.skip_delay)),
+                                                next_grading_allowed_at=now)
 
     exercise, progress = exercise_and_progress
 
     logging.info(progress.start_time.tzinfo)
 
-    return ExerciseWithSkipUnlockTime(**exercise.to_dict(),
-                                      skip_unlock_time=(progress.start_time + timedelta(minutes=exercise.skip_delay)))
+    return ExerciseWithUnlockTimestamps(**exercise.to_dict(),
+                                        skip_unlock_time=(
+                                                progress.start_time + timedelta(minutes=exercise.skip_delay)),
+                                        next_grading_allowed_at=progress.next_grading_allowed_at)
 
 
 @router.post("/current/skip", status_code=status.HTTP_204_NO_CONTENT)
