@@ -16,8 +16,9 @@ class ExerciseRead(ExerciseCreate):
     id: int
 
 
-class ExerciseWithSkipUnlockTime(ExerciseRead):
+class ExerciseWithUnlockTimestamps(ExerciseRead):
     skip_unlock_time: datetime
+    next_grading_allowed_at: datetime
 
 
 class SystemState(BaseModel):
