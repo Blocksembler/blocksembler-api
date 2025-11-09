@@ -68,6 +68,10 @@ class TestExercise:
 
         exercise_1 = dict(EXERCISES[1])
         exercise_1["skip_unlock_time"] = datetime(year=2025, month=10, day=7, hour=19, minute=35, second=0).isoformat()
+        exercise_1["next_grading_allowed_at"] = datetime(year=2025, month=10, day=7, hour=19, minute=35,
+                                                         second=0).isoformat()
+
+        print(response.json())
 
         assert response.status_code == 200
         assert response.json() == exercise_1
@@ -90,6 +94,7 @@ class TestExercise:
 
         exercise_2 = dict(EXERCISES[2])
         exercise_2["skip_unlock_time"] = "2025-10-07T19:40:00Z"
+        exercise_2["next_grading_allowed_at"] = "2025-10-07T19:35:00Z"
 
         assert response.status_code == 200
         assert response.json() == exercise_2
@@ -104,6 +109,7 @@ class TestExercise:
 
         exercise_0 = dict(EXERCISES[0])
         exercise_0["skip_unlock_time"] = "2025-10-07T19:40:00Z"
+        exercise_0["next_grading_allowed_at"] = "2025-10-07T19:35:00Z"
 
         assert response.status_code == 200
         assert response.json() == exercise_0
