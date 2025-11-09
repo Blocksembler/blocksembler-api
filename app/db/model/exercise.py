@@ -59,6 +59,8 @@ class ExerciseProgress(Base):
     start_time = sa.Column(sa.DateTime(timezone=True), nullable=False)
     end_time = sa.Column(sa.DateTime(timezone=True), nullable=True)
     skipped = sa.Column(sa.BOOLEAN, nullable=False)
+    failed_submissions = sa.Column(sa.INTEGER, nullable=False, default=0)
+    next_grading_allowed_at = sa.Column(sa.DateTime(timezone=True), nullable=True)
 
 
 class Competition(Base):

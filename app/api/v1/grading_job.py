@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from uuid import uuid4
 
+import sqlalchemy as sa
 from aio_pika import Message
 from aio_pika.abc import AbstractRobustChannel
 from fastapi import APIRouter, Depends, HTTPException
@@ -18,6 +19,8 @@ from app.db.model.grading_job import GradingJob
 from app.mq.message_queue import get_mq_channel
 from app.util import get_datetime_now
 
+INITIAL_JOB_STATUS = "pending"
+
 router = APIRouter(
     prefix="/grading-jobs",
     tags=["grading jobs"],
@@ -30,9 +33,11 @@ async def submit_grading_job(job_msg: dict, session: AsyncSession, ch: AbstractR
         id=job_msg["job_id"],
         tan_code=job_msg["tan_code"],
         exercise_id=job_msg["exercise_id"],
-        status="pending",
+        status=INITIAL_JOB_STATUS,
         started=now
     ))
+
+    await session.commit()
 
     job_msg["job_id"] = str(job_msg["job_id"])
 
@@ -52,6 +57,21 @@ async def create_submission(new_submission: ExerciseSubmission, session: AsyncSe
 
     if not exercise_progress:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tried to submit to an inactive exercise.")
+
+    if exercise_progress.next_grading_allowed_at and exercise_progress.next_grading_allowed_at > now:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail=f"Next grading allowed at {exercise_progress.next_grading_allowed_at}")
+
+    stmt = select(GradingJob).where(sa.and_(GradingJob.exercise_id == new_submission.exercise_id,
+                                            GradingJob.tan_code == new_submission.tan_code,
+                                            GradingJob.status == INITIAL_JOB_STATUS))
+
+    result = await session.execute(stmt)
+    grading_job = result.scalars().first()
+
+    if grading_job:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail="Previous grading job still in progress!")
 
     try:
         job_msg = {

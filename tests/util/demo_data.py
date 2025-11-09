@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from uuid import uuid4
 
 COMPETITIONS = [
     {
@@ -23,6 +24,10 @@ TANS = [
         "code": "test-tan-3",
         "competition_id": 1,
         "valid_from": datetime(2025, 10, 7, 18, 0, 0, tzinfo=timezone.utc),
+    },
+    {
+        "code": "test-tan-4",
+        "competition_id": 1,
     },
     {
         "code": "logging-test-tan",
@@ -94,7 +99,8 @@ EXERCISE_PROGRESS_ENTRIES = [
         "exercise_id": 2,
         "start_time": datetime(2025, 10, 7, 19, 30, 0, tzinfo=timezone.utc),
         "end_time": None,
-        "skipped": False
+        "skipped": False,
+        "next_grading_allowed_at": datetime(2025, 10, 7, 19, 35, 0, tzinfo=timezone.utc)
     },
     {
         "id": 3,
@@ -112,6 +118,25 @@ EXERCISE_PROGRESS_ENTRIES = [
         "end_time": datetime(2025, 10, 7, 20, 0, 0, tzinfo=timezone.utc),
         "skipped": False
     },
+    {
+        "id": 5,
+        "tan_code": "test-tan-4",
+        "exercise_id": 1,
+        "start_time": datetime(2025, 10, 7, 19, 0, 0, tzinfo=timezone.utc),
+        "end_time": None,
+        "skipped": False
+    },
+
+]
+
+GRADING_JOBS = [
+    {
+        "id": uuid4(),
+        "tan_code": "test-tan-4",
+        "exercise_id": 1,
+        "status": "pending",
+        "started": datetime(2025, 10, 7, 18, 0, 0, tzinfo=timezone.utc),
+    }
 ]
 
 EXERCISE_TEST_CASES = {
