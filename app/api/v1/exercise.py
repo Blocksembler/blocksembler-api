@@ -101,6 +101,11 @@ async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(ge
 
     logging.info(progress.start_time.tzinfo)
 
+    next_grading = progress.next_grading_allowed_at
+
+    if not next_grading:
+        next_grading = now
+
     return ExerciseWithUnlockTimestamps(**exercise.to_dict(),
                                         skip_unlock_time=(
                                                 progress.start_time + timedelta(minutes=exercise.skip_delay)),
