@@ -44,7 +44,6 @@ class TestExercise:
         new_exercise = {
             "title": "posted exercise",
             "markdown": "",
-            "coding_mode": "bbp",
             "skip_delay": 10,
             "next_exercise_id": None,
         }
@@ -56,7 +55,6 @@ class TestExercise:
 
         assert result_exercise["title"] == new_exercise["title"]
         assert result_exercise["markdown"] == new_exercise["markdown"]
-        assert result_exercise["coding_mode"] == new_exercise["coding_mode"]
         assert type(result_exercise["id"]) == int
         assert response.status_code == 201
 
