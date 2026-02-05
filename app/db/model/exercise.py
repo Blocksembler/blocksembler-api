@@ -32,6 +32,7 @@ class TestCase(Base):
     postcondition = sa.Column(sa.JSON, nullable=False)
     user_input = sa.Column(sa.JSON, nullable=False)
     expected_output = sa.Column(sa.JSON, nullable=False)
+    expected_instructions = sa.Column(sa.JSON, nullable=False)
 
     def to_dict(self):
         return {
@@ -42,6 +43,7 @@ class TestCase(Base):
             "postcondition": self.postcondition,
             "user_input": self.user_input,
             "expected_output": self.expected_output,
+            "expected_instructions": self.expected_instructions,
         }
 
 

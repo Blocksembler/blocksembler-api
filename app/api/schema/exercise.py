@@ -31,6 +31,7 @@ class TestCaseCreate(BaseModel):
     postcondition: SystemState
     user_input: list[str]
     expected_output: list[str]
+    expected_instructions: list[str]
 
 
 class TestCaseRead(TestCaseCreate):
