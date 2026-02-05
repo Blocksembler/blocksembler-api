@@ -85,7 +85,8 @@ async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(ge
                 tan_code=tan_code,
                 exercise_id=first_exercise.id,
                 start_time=now,
-                skipped=False
+                skipped=False,
+                next_grading_allowed_at=now,
             )
 
             session.add(ep)
