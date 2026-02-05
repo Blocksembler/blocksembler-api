@@ -133,7 +133,8 @@ class TestExercise:
                 "memory": {}
             },
             "user_input": ["10", "20"],
-            "expected_output": ["30"]
+            "expected_output": ["30"],
+            "expected_instructions": [],
         }
 
         response = client.post("/exercises/1/test-cases", json=new_test_case)

@@ -155,7 +155,8 @@ EXERCISE_TEST_CASES = {
                 "memory": {}
             },
             "user_input": ["4", "5"],
-            "expected_output": ["20"]
+            "expected_output": ["20"],
+            "expected_instructions": []
         }
     ]
 }
