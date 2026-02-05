@@ -110,7 +110,7 @@ async def get_current_exercise(tan_code: str, session: AsyncSession = Depends(ge
     return ExerciseWithUnlockTimestamps(**exercise.to_dict(),
                                         skip_unlock_time=(
                                                 progress.start_time + timedelta(minutes=exercise.skip_delay)),
-                                        next_grading_allowed_at=progress.next_grading_allowed_at)
+                                        next_grading_allowed_at=next_grading)
 
 
 @router.post("/current/skip", status_code=status.HTTP_204_NO_CONTENT)
