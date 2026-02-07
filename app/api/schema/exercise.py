@@ -32,6 +32,7 @@ class TestCaseCreate(BaseModel):
     user_input: list[str]
     expected_output: list[str]
     expected_instructions: list[str]
+    step_limit: Optional[int] = None
 
 
 class TestCaseRead(TestCaseCreate):
