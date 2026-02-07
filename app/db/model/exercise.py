@@ -33,6 +33,7 @@ class TestCase(Base):
     user_input = sa.Column(sa.JSON, nullable=False)
     expected_output = sa.Column(sa.JSON, nullable=False)
     expected_instructions = sa.Column(sa.JSON, nullable=False)
+    step_limit = sa.Column(sa.Integer, nullable=True)
 
     def to_dict(self):
         return {
@@ -44,6 +45,7 @@ class TestCase(Base):
             "user_input": self.user_input,
             "expected_output": self.expected_output,
             "expected_instructions": self.expected_instructions,
+            "step_limit": self.step_limit,
         }
 
 
