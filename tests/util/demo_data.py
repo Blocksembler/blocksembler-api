@@ -62,6 +62,7 @@ EXERCISES = [
         "id": 1,
         "title": "Demo Exercise 1",
         "markdown": "",
+        "markdown_de": "",
         "skip_delay": 5,
         "next_exercise_id": 2,
     },
@@ -69,6 +70,7 @@ EXERCISES = [
         "id": 2,
         "title": "Demo exercise 2",
         "markdown": "",
+        "markdown_de": "",
         "skip_delay": 5,
         "next_exercise_id": 3,
     },
@@ -76,6 +78,7 @@ EXERCISES = [
         "id": 3,
         "title": "Demo exercise 3",
         "markdown": "",
+        "markdown_de": "",
         "skip_delay": 5,
         "next_exercise_id": None,
     }

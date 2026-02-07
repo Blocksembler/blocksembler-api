@@ -9,6 +9,7 @@ class Exercise(Base):
     id = sa.Column(sa.INTEGER, default=None, primary_key=True)
     title = sa.Column(sa.TEXT, nullable=False)
     markdown = sa.Column(sa.TEXT, nullable=False)
+    markdown_de = sa.Column(sa.TEXT, nullable=False, default="")
     next_exercise_id = sa.Column(sa.Integer, sa.ForeignKey("exercise.id"), nullable=True)
     skip_delay = sa.Column(sa.Integer, nullable=False)
 
@@ -17,6 +18,7 @@ class Exercise(Base):
             "id": self.id,
             "title": self.title,
             "markdown": self.markdown,
+            "markdown_de": self.markdown_de,
             "next_exercise_id": self.next_exercise_id,
             "skip_delay": self.skip_delay,
         }
