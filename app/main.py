@@ -17,9 +17,11 @@ async def lifespan(_app: FastAPI):
     else:
         logging.basicConfig(level=logging.INFO)
 
-    logging.info("create tables [start]")
-    await create_tables()
-    logging.info("create tables [done]")
+
+    if conf.DEBUG:
+        logging.info("create tables [start]")
+        await create_tables()
+        logging.info("create tables [done]")
 
     logging.info("setup message queue exchange [start]")
 
