@@ -9,7 +9,10 @@ if [[ "$DEBUG" == "true" || "$DEBUG" == "1" ]]; then
   echo "DEBUG=true --> Skipping Alembic migrations"
 else
   echo "Running Alembic migrations..."
-  alembic upgrade head
+  if ! alembic upgrade head; then
+    echo "Alembic migrations failed, exiting..."
+    exit 1
+  fi
   echo "Migrations completed..."
 fi
 
