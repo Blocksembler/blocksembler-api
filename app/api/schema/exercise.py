@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class ExerciseCreate(BaseModel):
     title: str
     markdown: str
+    markdown_de: str = ""
     skip_delay: int
     next_exercise_id: Optional[int]
 
