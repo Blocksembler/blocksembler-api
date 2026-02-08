@@ -46,7 +46,7 @@ async def lifespan(_app: FastAPI):
 if conf.DEBUG:
     app = FastAPI(root_path=conf.BASE_URL, lifespan=lifespan)
 else:
-    app = FastAPI(root_path=conf.BASE_URL, docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(root_path=conf.BASE_URL, lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 
 app.add_middleware(
     CORSMiddleware,
