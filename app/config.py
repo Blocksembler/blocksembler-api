@@ -4,10 +4,13 @@ DEBUG = os.environ.get('DEBUG', 'true').lower() == 'true'
 ORIGINS = os.environ.get("BLOCKSEMBLER_ORIGINS", "*").split(',')
 BASE_URL = os.environ.get('BLOCKSEMBLER_API_BASE_URL', '')
 
-DATABASE_URL = os.environ.get("BLOCKSEMBLER_DB_URI",
-                              "postgresql+asyncpg://postgres:postgres@blocksembler-db:5432/blocksembler")
+API_PWD = os.environ.get('BLOCKSEMBLER_API_PWD', 's3cr3t!')
+API_USER = os.environ.get('BLOCKSEMBLER_ACCESS_TOKEN', 'admin')
 
-MQ_URL = os.environ.get('BLOCKSEMBLER_MQ_URL', 'blocksembler-mq')
+DATABASE_URL = os.environ.get("BLOCKSEMBLER_DB_URI",
+                              "postgresql+asyncpg://postgres:postgres@localhost:5432/blocksembler")
+
+MQ_URL = os.environ.get('BLOCKSEMBLER_MQ_URL', 'localhost')
 MQ_PORT = os.environ.get('BLOCKSEMBLER_MQ_PORT', '5672')
 MQ_USER = os.environ.get("BLOCKSEMBLER_MQ_USER", "blocksembler")
 MQ_PWD = os.environ.get("BLOCKSEMBLER_MQ_PWD", "blocksembler")

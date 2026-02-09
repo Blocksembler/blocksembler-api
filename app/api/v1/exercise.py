@@ -7,6 +7,7 @@ from fastapi.params import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.auth import get_current_username
 from app.api.schema.exercise import ExerciseRead, ExerciseCreate, TestCaseRead, TestCaseCreate, \
     ExerciseWithUnlockTimestamps
 from app.db.database import get_session
@@ -159,7 +160,8 @@ async def post_skip_current_exercise(tan_code: str, session: AsyncSession = Depe
 @router.get("/{exercise_id}",
             response_model=ExerciseRead,
             status_code=status.HTTP_200_OK)
-async def get_exercise(exercise_id: int, session: AsyncSession = Depends(get_session)) -> ExerciseRead:
+async def get_exercise(exercise_id: int, _username: str = Depends(get_current_username),
+                       session: AsyncSession = Depends(get_session)) -> ExerciseRead:
     statement = select(Exercise).where(Exercise.id == exercise_id)
     result = await session.execute(statement)
     exercise = result.scalars().first()
@@ -171,7 +173,9 @@ async def get_exercise(exercise_id: int, session: AsyncSession = Depends(get_ses
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ExerciseRead)
-async def create_exercise(new_exercise: ExerciseCreate, session: AsyncSession = Depends(get_session)) -> ExerciseRead:
+async def create_exercise(new_exercise: ExerciseCreate,
+                          _username: str = Depends(get_current_username),
+                          session: AsyncSession = Depends(get_session)) -> ExerciseRead:
     exercise = Exercise(**new_exercise.model_dump())
     exercise.id = None
 
@@ -184,6 +188,7 @@ async def create_exercise(new_exercise: ExerciseCreate, session: AsyncSession = 
 
 @router.post("/{exercise_id}/test-cases", response_model=TestCaseRead)
 async def create_test_case(exercise_id: int, new_test_case: TestCaseCreate,
+                           _username: str = Depends(get_current_username),
                            session: AsyncSession = Depends(get_session)) -> TestCaseRead:
     test_case = TestCase(exercise_id=exercise_id, **new_test_case.model_dump())
     session.add(test_case)
@@ -195,7 +200,8 @@ async def create_test_case(exercise_id: int, new_test_case: TestCaseCreate,
 
 
 @router.get("/{exercise_id}/test-cases", response_model=list[TestCaseRead], status_code=status.HTTP_200_OK)
-async def get_test_cases(exercise_id: int, session: AsyncSession = Depends(get_session)) -> list[TestCaseRead]:
+async def get_test_cases(exercise_id: int, _username: str = Depends(get_current_username),
+                         session: AsyncSession = Depends(get_session)) -> list[TestCaseRead]:
     statement = select(TestCase).where(TestCase.exercise_id == exercise_id)
     result = await session.execute(statement)
     test_cases = result.scalars().all()
