@@ -4,6 +4,7 @@ from fastapi import HTTPException, APIRouter, status, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.auth import get_current_username
 from app.api.schema.logging_event import LoggingEventRead, LoggingEventCreate
 from app.db.database import get_session
 from app.db.model.logging_event import LoggingEvent
@@ -18,7 +19,8 @@ router = APIRouter(
 @router.get("/{tan_code}",
             response_model=list[LoggingEventRead],
             status_code=status.HTTP_200_OK)
-async def get_logging_events(tan_code: str, session: AsyncSession = Depends(get_session)) -> list[LoggingEventRead]:
+async def get_logging_events(tan_code: str, _username: str = Depends(get_current_username),
+                             session: AsyncSession = Depends(get_session)) -> list[LoggingEventRead]:
     statement = select(Tan).where(Tan.code == tan_code)
     result = await session.execute(statement)
     tan = result.scalars().first()

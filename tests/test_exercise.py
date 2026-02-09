@@ -1,13 +1,15 @@
 import asyncio
 from datetime import datetime, timezone
 
-from fastapi import status
+from fastapi import status, security
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
+from app.config import API_USER, API_PWD
 from app.db.database import get_session
 from app.main import app
 from app.util import get_datetime_now
+from tests.util.auth_util import basic_auth_header
 from tests.util.db_util import create_test_tables, get_override_dependency, insert_demo_data, DB_URI
 from tests.util.demo_data import EXERCISES
 
@@ -29,10 +31,11 @@ class TestExercise:
         asyncio.run(insert_demo_data(self.async_session))
 
     def test_get_exercise(self):
+        app.dependency_overrides[security] = get_override_dependency(self.engine)
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/exercises/1")
+        response = client.get("/exercises/1", headers=basic_auth_header(API_USER, API_PWD))
 
         assert response.json() == EXERCISES[0]
         assert response.status_code == 200
@@ -48,7 +51,7 @@ class TestExercise:
             "next_exercise_id": None,
         }
 
-        response = client.post("/exercises", json=new_exercise)
+        response = client.post("/exercises", json=new_exercise, headers=basic_auth_header(API_USER, API_PWD))
         result_exercise = response.json()
 
         print(result_exercise)
@@ -137,7 +140,8 @@ class TestExercise:
             "expected_instructions": [],
         }
 
-        response = client.post("/exercises/1/test-cases", json=new_test_case)
+        response = client.post("/exercises/1/test-cases", json=new_test_case,
+                               headers=basic_auth_header(API_USER, API_PWD))
 
         result_test_case = response.json()
 
@@ -153,7 +157,7 @@ class TestExercise:
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/exercises/2/test-cases")
+        response = client.get("/exercises/2/test-cases", headers=basic_auth_header(API_USER, API_PWD))
         result_test_cases = response.json()
 
         expected_test_case = {

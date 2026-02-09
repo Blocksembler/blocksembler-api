@@ -4,8 +4,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 from app.api.schema.logging_event import LoggingEventRead
+from app.config import API_USER, API_PWD
 from app.db.database import get_session
 from app.main import app
+from tests.util.auth_util import basic_auth_header
 from tests.util.db_util import insert_demo_data, DB_URI, create_test_tables, get_override_dependency
 from tests.util.demo_data import LOGGING_EVENTS
 
@@ -23,7 +25,7 @@ class TestLoggingEvent:
         app.dependency_overrides[get_session] = get_override_dependency(self.engine)
         client = TestClient(app)
 
-        response = client.get("/logging-events/logging-test-tan")
+        response = client.get("/logging-events/logging-test-tan", headers=basic_auth_header(API_USER, API_PWD))
 
         assert response.status_code == 200
         assert len(response.json()) == 2
